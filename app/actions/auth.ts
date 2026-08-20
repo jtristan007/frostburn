@@ -11,31 +11,14 @@ export type AuthState =
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
 export async function login(state: AuthState, formData: FormData): Promise<AuthState> {
-  // TEMP DIAGNOSTIC (2026-08-20): login is crashing in production with no
-  // accessible logs. Wrap everything except redirect() (which must stay
-  // outside try/catch per Next.js docs) to surface the real error to the
-  // user instead of a generic 500. Remove once root-caused.
-  let supabase
-  try {
-    supabase = await createClient()
-  } catch (err) {
-    return { error: `createClient failed: ${err instanceof Error ? err.message : String(err)}` }
-  }
+  const supabase = await createClient()
 
-  let signInError
-  try {
-    const result = await supabase.auth.signInWithPassword({
-      email: formData.get('email') as string,
-      password: formData.get('password') as string,
-    })
-    signInError = result.error
-  } catch (err) {
-    return {
-      error: `signInWithPassword failed: ${err instanceof Error ? err.message : String(err)}`,
-    }
-  }
+  const { error } = await supabase.auth.signInWithPassword({
+    email: formData.get('email') as string,
+    password: formData.get('password') as string,
+  })
 
-  if (signInError) return { error: signInError.message }
+  if (error) return { error: error.message }
 
   redirect('/dashboard')
 }

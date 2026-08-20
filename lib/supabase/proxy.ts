@@ -54,14 +54,11 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url)
     }
   } catch (err) {
-    // TEMP DIAGNOSTIC (2026-08-20): the auth middleware was hard-crashing
-    // in production with no accessible logs to explain why. Fail open
-    // instead of 500ing, and surface the error on a response header so it
-    // can be inspected with curl. Remove once root-caused.
-    supabaseResponse.headers.set(
-      'x-mw-error',
-      err instanceof Error ? `${err.name}: ${err.message}`.slice(0, 200) : String(err).slice(0, 200)
-    )
+    // Fail open rather than 500ing the entire site if the Supabase client
+    // can't be constructed (e.g. a misconfigured environment variable) --
+    // an auth-gating failure should degrade to "page loads, RLS still
+    // protects the data" rather than "site is down".
+    console.error('updateSession failed:', err)
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
