@@ -166,19 +166,30 @@ const FEATURES = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative" style={{ background: '#05070f' }}>
+      <div
+        className="fixed inset-0 -z-50 pointer-events-none"
+        style={{
+          backgroundImage:
+            'linear-gradient(180deg, rgba(5,7,15,0.8), rgba(5,7,15,0.94)), url(/frost-bg.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          opacity: 0.4,
+        }}
+      />
+
       <FrostHero />
 
-      <div className="border-t border-white/10 py-5" style={{ background: '#05070f' }}>
+      <div className="border-t border-white/10 py-5">
         <p className="text-center font-mono text-[11px] tracking-wide text-mist">
           No credit card required to start &nbsp;·&nbsp; Cancel anytime
         </p>
       </div>
 
-      <section className="bg-gray-50 py-24">
+      <section className="py-24">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <p className="font-mono text-[11px] font-medium text-ice uppercase tracking-[0.14em] mb-3">Sound familiar?</p>
-          <h2 className="text-3xl font-display font-bold text-navy max-w-2xl mx-auto">
+          <h2 className="text-3xl font-display font-bold text-white max-w-2xl mx-auto">
             Running HVAC is already hard. The admin work shouldn&apos;t be.
           </h2>
           <div className="mt-14 grid md:grid-cols-3 gap-6 text-left">
@@ -199,10 +210,13 @@ export default function LandingPage() {
                 body: 'No idea how the business is actually doing until you sit down and dig through everything yourself.',
               },
             ].map((p) => (
-              <div key={p.title} className="bg-white rounded-2xl border border-gray-100 p-6">
+              <div
+                key={p.title}
+                className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-6"
+              >
                 <div className="text-3xl mb-3">{p.emoji}</div>
-                <h3 className="text-base font-semibold text-navy">{p.title}</h3>
-                <p className="text-sm text-gray-500 mt-2">{p.body}</p>
+                <h3 className="text-base font-semibold text-white">{p.title}</h3>
+                <p className="text-sm text-mist mt-2">{p.body}</p>
               </div>
             ))}
           </div>
@@ -214,8 +228,8 @@ export default function LandingPage() {
           <p className="font-mono text-[11px] font-medium text-ice uppercase tracking-[0.14em] mb-3">
             What Frostburn does
           </p>
-          <h2 className="text-3xl font-display font-bold text-navy">One platform. Everything handled.</h2>
-          <p className="mt-3 text-gray-400">
+          <h2 className="text-3xl font-display font-bold text-white">One platform. Everything handled.</h2>
+          <p className="mt-3 text-mist">
             From the first call to the final payment — and all the follow-up in between.
           </p>
         </div>
@@ -223,13 +237,13 @@ export default function LandingPage() {
           {FEATURES.map((f) => (
             <div
               key={f.title}
-              className="rounded-2xl border border-gray-100 p-6 transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-[1.03] hover:shadow-xl hover:border-ice/30"
+              className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-6 transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-[1.03] hover:shadow-xl hover:border-ice/40"
             >
               {f.illustration}
               <div className="mt-5">
-                <h3 className="text-lg font-semibold text-navy">{f.title}</h3>
-                <p className="text-sm text-blue-600 font-medium mt-1">{f.wit}</p>
-                <p className="text-sm text-gray-500 mt-2">{f.body}</p>
+                <h3 className="text-lg font-semibold text-white">{f.title}</h3>
+                <p className="text-sm text-ice-dim font-medium mt-1">{f.wit}</p>
+                <p className="text-sm text-mist mt-2">{f.body}</p>
               </div>
             </div>
           ))}
@@ -239,14 +253,14 @@ export default function LandingPage() {
       <section className="max-w-5xl mx-auto px-6 py-24">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <p className="font-mono text-[11px] font-medium text-ice uppercase tracking-[0.14em] mb-3">The upgrade</p>
-          <h2 className="text-3xl font-display font-bold text-navy">Before Frostburn. After Frostburn.</h2>
-          <p className="mt-3 text-gray-400">
+          <h2 className="text-3xl font-display font-bold text-white">Before Frostburn. After Frostburn.</h2>
+          <p className="mt-3 text-mist">
             The software doesn&apos;t change the work — it changes everything around the work.
           </p>
         </div>
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="rounded-2xl border border-gray-100 p-6">
-            <div className="text-xs font-semibold text-red-500 mb-4">✕ Without Frostburn</div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-6">
+            <div className="text-xs font-semibold text-red-400 mb-4">✕ Without Frostburn</div>
             <ul className="space-y-3">
               {[
                 ['📓', 'Invoices tracked in a notebook or your head'],
@@ -254,14 +268,14 @@ export default function LandingPage() {
                 ['📅', 'Scheduling conflicts found out last minute'],
                 ['❓', 'No idea how the business is actually performing'],
               ].map(([icon, text]) => (
-                <li key={text} className="text-sm text-gray-500 flex items-start gap-2.5">
+                <li key={text} className="text-sm text-mist flex items-start gap-2.5">
                   <span>{icon}</span> {text}
                 </li>
               ))}
             </ul>
           </div>
-          <div className="rounded-2xl border border-ice/30 bg-ice-pale/40 p-6">
-            <div className="text-xs font-semibold text-green-600 mb-4">✓ With Frostburn</div>
+          <div className="rounded-2xl border border-ice/30 bg-ice/[0.06] backdrop-blur-sm p-6">
+            <div className="text-xs font-semibold text-ice mb-4">✓ With Frostburn</div>
             <ul className="space-y-3">
               {[
                 ['💻', 'Every invoice sent and tracked in one place'],
@@ -269,7 +283,7 @@ export default function LandingPage() {
                 ['📆', 'Crew has their schedule, job notes, and history on any device'],
                 ['📊', 'A morning briefing lands in your inbox automatically, every day'],
               ].map(([icon, text]) => (
-                <li key={text} className="text-sm text-navy font-medium flex items-start gap-2.5">
+                <li key={text} className="text-sm text-white font-medium flex items-start gap-2.5">
                   <span>{icon}</span> {text}
                 </li>
               ))}
@@ -278,13 +292,13 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="bg-gray-50 py-24">
+      <section className="py-24">
         <div className="max-w-5xl mx-auto px-6 text-center">
           <p className="font-mono text-[11px] font-medium text-ice uppercase tracking-[0.14em] mb-3">Works everywhere</p>
-          <h2 className="text-3xl font-display font-bold text-navy">
+          <h2 className="text-3xl font-display font-bold text-white">
             Your office is wherever you have a signal.
           </h2>
-          <p className="mt-3 text-gray-400 max-w-xl mx-auto">
+          <p className="mt-3 text-mist max-w-xl mx-auto">
             Frostburn runs on iPhone, Android, Mac, Windows, and tablet — right in the browser, no
             download required.
           </p>
@@ -295,15 +309,15 @@ export default function LandingPage() {
               ['💻', 'Mac & Windows', 'Any browser'],
               ['📱', 'iPad & Tablet', 'Full experience'],
             ].map(([icon, name, detail]) => (
-              <div key={name} className="bg-white rounded-2xl border border-gray-100 p-5">
+              <div key={name} className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-5">
                 <div className="text-2xl mb-2">{icon}</div>
-                <div className="text-sm font-semibold text-navy">{name}</div>
-                <div className="text-xs text-gray-400 mt-0.5">{detail}</div>
+                <div className="text-sm font-semibold text-white">{name}</div>
+                <div className="text-xs text-mist mt-0.5">{detail}</div>
               </div>
             ))}
           </div>
-          <p className="mt-8 text-sm text-gray-500 max-w-lg mx-auto">
-            <strong className="text-navy">No download. No install.</strong> Open a browser, log in,
+          <p className="mt-8 text-sm text-mist max-w-lg mx-auto">
+            <strong className="text-white">No download. No install.</strong> Open a browser, log in,
             you&apos;re live.
           </p>
         </div>
@@ -312,7 +326,7 @@ export default function LandingPage() {
       <section className="max-w-5xl mx-auto px-6 py-24">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <p className="font-mono text-[11px] font-medium text-ice uppercase tracking-[0.14em] mb-3">Getting started</p>
-          <h2 className="text-3xl font-display font-bold text-navy">Up and running in under 30 minutes.</h2>
+          <h2 className="text-3xl font-display font-bold text-white">Up and running in under 30 minutes.</h2>
         </div>
         <div className="grid md:grid-cols-4 gap-6">
           {[
@@ -322,11 +336,11 @@ export default function LandingPage() {
             ['4', 'Go do the work', 'Focus on the jobs. Frostburn handles the desk stuff.'],
           ].map(([num, title, body]) => (
             <div key={num}>
-              <div className="w-8 h-8 rounded-full bg-navy text-white text-sm font-bold flex items-center justify-center mb-3">
+              <div className="w-8 h-8 rounded-full border border-ice/40 bg-ice/10 text-ice font-mono text-sm font-semibold flex items-center justify-center mb-3">
                 {num}
               </div>
-              <h3 className="text-sm font-semibold text-navy">{title}</h3>
-              <p className="text-sm text-gray-500 mt-1.5">{body}</p>
+              <h3 className="text-sm font-semibold text-white">{title}</h3>
+              <p className="text-sm text-mist mt-1.5">{body}</p>
             </div>
           ))}
         </div>
@@ -337,7 +351,7 @@ export default function LandingPage() {
           <p className="font-mono text-[11px] font-medium text-ice uppercase tracking-[0.14em] mb-3">
             Simple, honest pricing
           </p>
-          <h2 className="text-3xl font-display font-bold text-navy">
+          <h2 className="text-3xl font-display font-bold text-white">
             Flat rate. No surprises. No per-tech math.
           </h2>
         </div>
@@ -345,8 +359,10 @@ export default function LandingPage() {
           {TIERS.map((tier) => (
             <div
               key={tier.name}
-              className={`rounded-2xl border p-8 ${
-                tier.popular ? 'border-ice/40 shadow-md relative' : 'border-gray-100'
+              className={`rounded-2xl border p-8 backdrop-blur-sm relative ${
+                tier.popular
+                  ? 'border-ice/50 bg-ice/[0.06] shadow-[0_0_50px_-12px_rgba(56,189,248,0.5)]'
+                  : 'border-white/10 bg-white/[0.03]'
               }`}
             >
               {tier.popular && (
@@ -354,15 +370,15 @@ export default function LandingPage() {
                   Most Popular
                 </span>
               )}
-              <h3 className="text-lg font-semibold text-navy">{tier.name}</h3>
-              <p className="text-sm text-gray-400 mt-1">{tier.techs}</p>
+              <h3 className="text-lg font-semibold text-white">{tier.name}</h3>
+              <p className="text-sm text-mist mt-1">{tier.techs}</p>
               <p className="mt-4">
-                <span className="text-4xl font-bold text-navy">${tier.price}</span>
-                <span className="text-gray-400 text-sm">/mo</span>
+                <span className="font-mono text-4xl font-bold text-white">${tier.price}</span>
+                <span className="text-mist text-sm">/mo</span>
               </p>
               <ul className="mt-6 space-y-3">
                 {tier.features.map((f) => (
-                  <li key={f} className="text-sm text-gray-600 flex items-start gap-2">
+                  <li key={f} className="text-sm text-gray-300 flex items-start gap-2">
                     <span className="text-ice">✓</span>
                     {f}
                   </li>
@@ -373,7 +389,7 @@ export default function LandingPage() {
                 className={`mt-8 block text-center text-sm font-semibold py-2.5 rounded-lg transition-colors ${
                   tier.popular
                     ? 'bg-ice text-navy hover:bg-ice-dim'
-                    : 'bg-gray-50 text-navy hover:bg-gray-100'
+                    : 'bg-white/10 text-white border border-white/15 hover:bg-white/15'
                 }`}
               >
                 Start Free Today
@@ -386,7 +402,7 @@ export default function LandingPage() {
       <section className="py-24" style={{ background: '#05091a' }}>
         <div className="max-w-2xl mx-auto px-6 text-center">
           <h2 className="text-3xl font-display font-bold text-white">Stop running your business from a notepad.</h2>
-          <p className="mt-3 text-gray-400">
+          <p className="mt-3 text-mist">
             Set up your pricing book, add your first client, and let the follow-up happen on its
             own.
           </p>
@@ -398,7 +414,7 @@ export default function LandingPage() {
               Get Started Free →
             </Link>
           </div>
-          <p className="mt-6 text-xs text-gray-500">
+          <p className="mt-6 text-xs text-mist">
             🍎 iPhone &nbsp;·&nbsp; 🤖 Android &nbsp;·&nbsp; 💻 Desktop &nbsp;·&nbsp; 📱 Tablet
             &nbsp;·&nbsp; No download required
           </p>
@@ -408,7 +424,7 @@ export default function LandingPage() {
       <footer className="border-t border-white/10 py-8" style={{ background: '#05091a' }}>
         <div className="max-w-6xl mx-auto px-6 flex flex-col items-center gap-3">
           <Logo className="h-7" />
-          <p className="text-sm text-gray-500">Frostburn — built for small HVAC operators.</p>
+          <p className="text-sm text-mist">Frostburn — built for small HVAC operators.</p>
         </div>
       </footer>
     </div>
