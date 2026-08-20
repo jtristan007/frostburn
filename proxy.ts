@@ -3,8 +3,10 @@ import { updateSession } from '@/lib/supabase/proxy'
 
 const publicPaths = [
   '/',
+  '/login',
   '/signup',
   '/forgot-password',
+  '/reset-password',
   '/quote',
   '/api/stripe/webhook',
   '/api/cron',
