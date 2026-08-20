@@ -13,10 +13,74 @@
   --color-ice-pale: #f0f9ff;
   --color-amber: #f59e0b;
   --color-brand-green: #22c55e;
+  --color-mist: #8b9bb4;
   --font-sans: var(--font-inter);
+  --font-display: var(--font-display-raw);
+  --font-mono: var(--font-mono-raw);
 }
 
 body {
   background: #ffffff;
   color: var(--color-navy);
+}
+
+/* Cold air drifting through the hero headline -- a slow icy gradient sweep,
+   not a hard shimmer. */
+@keyframes frost-drift {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.frost-text {
+  background: linear-gradient(
+    100deg,
+    #ffffff 0%,
+    #ffffff 30%,
+    var(--color-ice-dim) 45%,
+    var(--color-ice) 55%,
+    #ffffff 70%,
+    #ffffff 100%
+  );
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: frost-drift 7s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frost-text {
+    animation: none;
+    background: none;
+    color: #ffffff;
+  }
+}
+
+/* Staggered entrance for hero content -- pair with an inline
+   animation-delay per element. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rise {
+  animation: rise-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }

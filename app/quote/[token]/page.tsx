@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getQuoteByToken } from '@/app/actions/quotes'
+import { Logo } from '@/components/logo'
 
 export default async function PublicQuotePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
@@ -12,9 +13,7 @@ export default async function PublicQuotePage({ params }: { params: Promise<{ to
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-lg">
         <div className="text-center mb-6">
-          <span className="text-lg font-bold tracking-tight text-navy">
-            Frost<span className="text-ice">burn</span>
-          </span>
+          <Logo className="h-9 inline-block" />
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">

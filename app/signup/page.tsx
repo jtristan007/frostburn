@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Logo } from '@/components/logo'
 import { useActionState } from 'react'
 import { signup } from '@/app/actions/auth'
 
@@ -11,8 +12,8 @@ export default function SignupPage() {
     <div className="min-h-screen flex items-center justify-center px-6 bg-gray-50">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <Link href="/" className="text-xl font-bold tracking-tight">
-            Frostburn
+          <Link href="/" className="inline-block">
+            <Logo className="h-9 mx-auto" />
           </Link>
           <h1 className="mt-6 text-2xl font-bold text-navy">
             Create your account

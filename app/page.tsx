@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { Logo } from '@/components/logo'
+import { FrostHero } from '@/components/landing/frost-hero'
 
 const TIERS = [
   {
@@ -165,57 +167,54 @@ const FEATURES = [
 export default function LandingPage() {
   return (
     <div className="min-h-screen">
-      <div
-        className="relative"
-        style={{ background: 'linear-gradient(160deg, #080f28, #0d1530)' }}
-      >
-        <header className="border-b border-white/10">
-          <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-            <span className="text-lg font-bold tracking-tight text-white">
-              Frost<span className="text-ice">burn</span>
-            </span>
-            <div className="flex items-center gap-4">
-              <Link href="/login" className="text-sm font-medium text-gray-300 hover:text-white">
-                Sign in
-              </Link>
-              <Link
-                href="/signup"
-                className="text-sm font-semibold bg-ice text-navy px-4 py-2 rounded-lg hover:bg-ice-dim transition-colors"
-              >
-                Get Started
-              </Link>
-            </div>
-          </div>
-        </header>
+      <FrostHero />
 
-        <section className="max-w-4xl mx-auto px-6 py-24 text-center">
-          <p className="inline-block text-xs font-medium text-ice bg-ice/10 border border-ice/20 rounded-full px-3 py-1 mb-6">
-            Built for HVAC operators in Canada &amp; the Pacific Northwest
-          </p>
-          <h1 className="text-5xl font-bold tracking-tight text-white">
-            HVAC software that runs your business.
-          </h1>
-          <p className="mt-6 text-lg text-gray-400 max-w-2xl mx-auto">
-            While you&apos;re under a crawlspace, Frostburn is chasing your unpaid invoices,
-            tracking maintenance agreements, and keeping your schedule straight.
-          </p>
-          <div className="mt-10 flex items-center justify-center gap-4">
-            <Link
-              href="/signup"
-              className="text-sm font-semibold bg-ice text-navy px-6 py-3 rounded-lg hover:bg-ice-dim transition-colors"
-            >
-              Start Free Today →
-            </Link>
-          </div>
-        </section>
+      <div className="border-t border-white/10 py-5" style={{ background: '#05070f' }}>
+        <p className="text-center font-mono text-[11px] tracking-wide text-mist">
+          No credit card required to start &nbsp;·&nbsp; Cancel anytime
+        </p>
       </div>
+
+      <section className="bg-gray-50 py-24">
+        <div className="max-w-6xl mx-auto px-6 text-center">
+          <p className="font-mono text-[11px] font-medium text-ice uppercase tracking-[0.14em] mb-3">Sound familiar?</p>
+          <h2 className="text-3xl font-display font-bold text-navy max-w-2xl mx-auto">
+            Running HVAC is already hard. The admin work shouldn&apos;t be.
+          </h2>
+          <div className="mt-14 grid md:grid-cols-3 gap-6 text-left">
+            {[
+              {
+                emoji: '💸',
+                title: 'Invoices going cold',
+                body: 'Jobs wrapped up weeks ago, still unpaid. Following up manually is exhausting — and awkward with clients you actually like.',
+              },
+              {
+                emoji: '📋',
+                title: 'Scheduling chaos',
+                body: 'Double-booked jobs. Forgotten callbacks. Crew calling to ask where they’re supposed to be.',
+              },
+              {
+                emoji: '😤',
+                title: 'Zero visibility',
+                body: 'No idea how the business is actually doing until you sit down and dig through everything yourself.',
+              },
+            ].map((p) => (
+              <div key={p.title} className="bg-white rounded-2xl border border-gray-100 p-6">
+                <div className="text-3xl mb-3">{p.emoji}</div>
+                <h3 className="text-base font-semibold text-navy">{p.title}</h3>
+                <p className="text-sm text-gray-500 mt-2">{p.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <section className="max-w-6xl mx-auto px-6 py-24">
         <div className="text-center max-w-2xl mx-auto mb-14">
-          <p className="text-xs font-semibold text-ice uppercase tracking-wide mb-3">
+          <p className="font-mono text-[11px] font-medium text-ice uppercase tracking-[0.14em] mb-3">
             What Frostburn does
           </p>
-          <h2 className="text-3xl font-bold text-navy">One platform. Everything handled.</h2>
+          <h2 className="text-3xl font-display font-bold text-navy">One platform. Everything handled.</h2>
           <p className="mt-3 text-gray-400">
             From the first call to the final payment — and all the follow-up in between.
           </p>
@@ -237,7 +236,111 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <section className="max-w-5xl mx-auto px-6 py-24">
+        <div className="text-center max-w-2xl mx-auto mb-14">
+          <p className="font-mono text-[11px] font-medium text-ice uppercase tracking-[0.14em] mb-3">The upgrade</p>
+          <h2 className="text-3xl font-display font-bold text-navy">Before Frostburn. After Frostburn.</h2>
+          <p className="mt-3 text-gray-400">
+            The software doesn&apos;t change the work — it changes everything around the work.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="rounded-2xl border border-gray-100 p-6">
+            <div className="text-xs font-semibold text-red-500 mb-4">✕ Without Frostburn</div>
+            <ul className="space-y-3">
+              {[
+                ['📓', 'Invoices tracked in a notebook or your head'],
+                ['😬', 'Awkward calls chasing clients for payment'],
+                ['📅', 'Scheduling conflicts found out last minute'],
+                ['❓', 'No idea how the business is actually performing'],
+              ].map(([icon, text]) => (
+                <li key={text} className="text-sm text-gray-500 flex items-start gap-2.5">
+                  <span>{icon}</span> {text}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-ice/30 bg-ice-pale/40 p-6">
+            <div className="text-xs font-semibold text-green-600 mb-4">✓ With Frostburn</div>
+            <ul className="space-y-3">
+              {[
+                ['💻', 'Every invoice sent and tracked in one place'],
+                ['📧', 'Overdue reminders sent automatically — you never ask twice'],
+                ['📆', 'Crew has their schedule, job notes, and history on any device'],
+                ['📊', 'A morning briefing lands in your inbox automatically, every day'],
+              ].map(([icon, text]) => (
+                <li key={text} className="text-sm text-navy font-medium flex items-start gap-2.5">
+                  <span>{icon}</span> {text}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-gray-50 py-24">
+        <div className="max-w-5xl mx-auto px-6 text-center">
+          <p className="font-mono text-[11px] font-medium text-ice uppercase tracking-[0.14em] mb-3">Works everywhere</p>
+          <h2 className="text-3xl font-display font-bold text-navy">
+            Your office is wherever you have a signal.
+          </h2>
+          <p className="mt-3 text-gray-400 max-w-xl mx-auto">
+            Frostburn runs on iPhone, Android, Mac, Windows, and tablet — right in the browser, no
+            download required.
+          </p>
+          <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              ['🍎', 'iPhone', 'Safari · iOS'],
+              ['🤖', 'Android', 'Chrome'],
+              ['💻', 'Mac & Windows', 'Any browser'],
+              ['📱', 'iPad & Tablet', 'Full experience'],
+            ].map(([icon, name, detail]) => (
+              <div key={name} className="bg-white rounded-2xl border border-gray-100 p-5">
+                <div className="text-2xl mb-2">{icon}</div>
+                <div className="text-sm font-semibold text-navy">{name}</div>
+                <div className="text-xs text-gray-400 mt-0.5">{detail}</div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-8 text-sm text-gray-500 max-w-lg mx-auto">
+            <strong className="text-navy">No download. No install.</strong> Open a browser, log in,
+            you&apos;re live.
+          </p>
+        </div>
+      </section>
+
+      <section className="max-w-5xl mx-auto px-6 py-24">
+        <div className="text-center max-w-2xl mx-auto mb-14">
+          <p className="font-mono text-[11px] font-medium text-ice uppercase tracking-[0.14em] mb-3">Getting started</p>
+          <h2 className="text-3xl font-display font-bold text-navy">Up and running in under 30 minutes.</h2>
+        </div>
+        <div className="grid md:grid-cols-4 gap-6">
+          {[
+            ['1', 'Create your account', 'Set up your business profile and pricing book. Zero tech knowledge required.'],
+            ['2', 'Add your clients', 'Import existing customers or add them one by one. Each one gets welcomed automatically.'],
+            ['3', 'You’re automated by default', 'Overdue reminders and your morning briefing go out on their own, every day, from day one.'],
+            ['4', 'Go do the work', 'Focus on the jobs. Frostburn handles the desk stuff.'],
+          ].map(([num, title, body]) => (
+            <div key={num}>
+              <div className="w-8 h-8 rounded-full bg-navy text-white text-sm font-bold flex items-center justify-center mb-3">
+                {num}
+              </div>
+              <h3 className="text-sm font-semibold text-navy">{title}</h3>
+              <p className="text-sm text-gray-500 mt-1.5">{body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section id="pricing" className="max-w-6xl mx-auto px-6 py-24">
+        <div className="text-center max-w-2xl mx-auto mb-14">
+          <p className="font-mono text-[11px] font-medium text-ice uppercase tracking-[0.14em] mb-3">
+            Simple, honest pricing
+          </p>
+          <h2 className="text-3xl font-display font-bold text-navy">
+            Flat rate. No surprises. No per-tech math.
+          </h2>
+        </div>
         <div className="grid md:grid-cols-3 gap-6">
           {TIERS.map((tier) => (
             <div
@@ -280,9 +383,32 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer className="border-t border-gray-100 py-8" style={{ background: '#05091a' }}>
-        <div className="max-w-6xl mx-auto px-6 text-sm text-gray-400 text-center">
-          Frostburn — built for Canada and the Pacific Northwest.
+      <section className="py-24" style={{ background: '#05091a' }}>
+        <div className="max-w-2xl mx-auto px-6 text-center">
+          <h2 className="text-3xl font-display font-bold text-white">Stop running your business from a notepad.</h2>
+          <p className="mt-3 text-gray-400">
+            Set up your pricing book, add your first client, and let the follow-up happen on its
+            own.
+          </p>
+          <div className="mt-8">
+            <Link
+              href="/signup"
+              className="inline-block text-sm font-semibold bg-ice text-navy px-6 py-3 rounded-lg hover:bg-ice-dim transition-colors"
+            >
+              Get Started Free →
+            </Link>
+          </div>
+          <p className="mt-6 text-xs text-gray-500">
+            🍎 iPhone &nbsp;·&nbsp; 🤖 Android &nbsp;·&nbsp; 💻 Desktop &nbsp;·&nbsp; 📱 Tablet
+            &nbsp;·&nbsp; No download required
+          </p>
+        </div>
+      </section>
+
+      <footer className="border-t border-white/10 py-8" style={{ background: '#05091a' }}>
+        <div className="max-w-6xl mx-auto px-6 flex flex-col items-center gap-3">
+          <Logo className="h-7" />
+          <p className="text-sm text-gray-500">Frostburn — built for small HVAC operators.</p>
         </div>
       </footer>
     </div>

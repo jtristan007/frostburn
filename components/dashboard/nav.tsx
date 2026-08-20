@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { logout } from '@/app/actions/auth'
+import { Logo } from '@/components/logo'
 
 const LINKS = [
   { href: '/dashboard', label: 'Dashboard' },
@@ -22,8 +23,8 @@ export function DashboardNav({ accountName }: { accountName: string }) {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-14">
           <div className="flex items-center gap-8">
-            <Link href="/dashboard" className="text-base font-bold tracking-tight text-white">
-              Frost<span className="text-ice">burn</span>
+            <Link href="/dashboard" className="inline-block">
+              <Logo className="h-8" />
             </Link>
             <nav className="hidden md:flex items-center gap-1">
               {LINKS.map((link) => {
