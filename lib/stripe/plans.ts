@@ -12,6 +12,14 @@ export const TIER_PRICES: Record<Tier, number> = {
   pro: 499,
 }
 
+// The tier names on the pricing page ("1-3 techs", "4-15 techs", "15+
+// techs") -- enforced here when inviting a teammate, not just labeling.
+export const TIER_TECH_LIMITS: Record<Tier, number> = {
+  starter: 3,
+  growth: 15,
+  pro: Infinity,
+}
+
 // Filled in from Stripe Dashboard price IDs -- see .env.local.example.
 // Fails loudly at startup rather than silently routing to an empty
 // Checkout Session if one is missing.

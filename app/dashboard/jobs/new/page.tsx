@@ -8,9 +8,10 @@ const labelClass = 'block text-sm font-medium text-gray-700 mb-1.5'
 
 export default async function NewJobPage() {
   const { supabase } = await getCurrentAccount()
-  const [{ data: customers }, { data: equipment }] = await Promise.all([
+  const [{ data: customers }, { data: equipment }, { data: technicians }] = await Promise.all([
     supabase.from('customers').select('id, name').order('name'),
     supabase.from('equipment').select('id, unit_type, model, customers(name)').order('unit_type'),
+    supabase.from('account_users').select('user_id, full_name'),
   ])
 
   return (
@@ -45,6 +46,17 @@ export default async function NewJobPage() {
         <div>
           <label className={labelClass} htmlFor="scheduled_date">Scheduled date &amp; time</label>
           <input id="scheduled_date" name="scheduled_date" type="datetime-local" required className={inputClass} />
+        </div>
+        <div>
+          <label className={labelClass} htmlFor="assigned_technician_id">Assigned technician</label>
+          <select id="assigned_technician_id" name="assigned_technician_id" defaultValue="" className={inputClass}>
+            <option value="">Unassigned</option>
+            {(technicians ?? []).map((t) => (
+              <option key={t.user_id} value={t.user_id}>
+                {t.full_name ?? t.user_id}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <label className={labelClass} htmlFor="status">Status</label>

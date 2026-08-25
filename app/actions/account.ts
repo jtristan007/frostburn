@@ -23,6 +23,22 @@ export async function createAccountForNewUser(user: User): Promise<string> {
 
   if (existing) return existing.account_id
 
+  // Invited teammates never go through the "new company" path -- they join
+  // the account they were invited into. Set on the auth user by
+  // inviteTeammate() (app/actions/team.ts) via inviteUserByEmail's `data`.
+  const invitedAccountId = user.user_metadata?.invited_account_id as string | undefined
+  if (invitedAccountId) {
+    const role = (user.user_metadata?.invited_role as string) || 'technician'
+    const { error } = await admin.from('account_users').insert({
+      account_id: invitedAccountId,
+      user_id: user.id,
+      role,
+      full_name: (user.user_metadata?.full_name as string) || user.email,
+    })
+    if (error) throw new Error(error.message)
+    return invitedAccountId
+  }
+
   const companyName = (user.user_metadata?.company_name as string) || 'My Company'
 
   const { data: account, error: accountError } = await admin
