@@ -5,9 +5,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { account } = await getCurrentAccount()
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <DashboardNav accountName={account.name} />
-      <main className="max-w-7xl mx-auto px-6 py-8">{children}</main>
+    <div className="min-h-screen bg-gray-50 print:bg-white">
+      <div className="print:hidden">
+        <DashboardNav accountName={account.name} />
+      </div>
+      <main className="max-w-7xl mx-auto px-6 py-8 print:p-0 print:max-w-none">{children}</main>
     </div>
   )
 }

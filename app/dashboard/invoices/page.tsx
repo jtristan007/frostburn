@@ -47,7 +47,7 @@ export default async function InvoicesPage() {
               {(invoices ?? []).map((inv) => (
                 <tr key={inv.id} className="border-b border-gray-50 last:border-0">
                   <td className="px-6 py-3">
-                    <Link href={`/dashboard/invoices/${inv.id}/edit`} className="text-navy font-medium hover:text-ice">
+                    <Link href={`/dashboard/invoices/${inv.id}`} className="text-navy font-medium hover:text-ice">
                       {inv.invoice_number}
                     </Link>
                   </td>

@@ -48,6 +48,12 @@ export function DashboardNav({ accountName }: { accountName: string }) {
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-400 hidden sm:inline">{accountName}</span>
             <Link
+              href="/dashboard/settings/branding"
+              className="text-sm text-gray-400 hover:text-white"
+            >
+              Branding
+            </Link>
+            <Link
               href="/dashboard/settings/billing"
               className="text-sm text-gray-400 hover:text-white"
             >
