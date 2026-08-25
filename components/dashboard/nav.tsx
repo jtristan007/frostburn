@@ -13,6 +13,7 @@ const LINKS = [
   { href: '/dashboard/agreements', label: 'Agreements' },
   { href: '/dashboard/jobs', label: 'Jobs' },
   { href: '/dashboard/invoices', label: 'Invoices' },
+  { href: '/dashboard/assistant', label: 'AI Assistant' },
 ]
 
 export function DashboardNav({ accountName }: { accountName: string }) {
