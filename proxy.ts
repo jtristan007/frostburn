@@ -8,6 +8,8 @@ const publicPaths = [
   '/forgot-password',
   '/reset-password',
   '/quote',
+  '/terms',
+  '/privacy',
   '/api/stripe/webhook',
   '/api/cron',
 ]
