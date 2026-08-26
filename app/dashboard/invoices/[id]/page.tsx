@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCurrentAccount } from '@/lib/account'
 import { PrintButton } from '@/components/dashboard/print-button'
+import { SendToQuickBooksButton } from '@/components/dashboard/send-to-quickbooks-button'
+import { getConnectionStatus } from '@/lib/quickbooks/client'
 
 const STATUS_LABELS: Record<string, string> = {
   draft: 'Draft',
@@ -14,13 +16,16 @@ export default async function InvoiceViewPage({ params }: { params: Promise<{ id
   const { id } = await params
   const { supabase, account } = await getCurrentAccount()
 
-  const { data: invoice } = await supabase
-    .from('invoices')
-    .select(
-      'id, invoice_number, status, issue_date, due_date, total, customers(name, email, phone, address, city)'
-    )
-    .eq('id', id)
-    .maybeSingle()
+  const [{ data: invoice }, qbStatus] = await Promise.all([
+    supabase
+      .from('invoices')
+      .select(
+        'id, invoice_number, status, issue_date, due_date, total, qb_invoice_id, customers(name, email, phone, address, city)'
+      )
+      .eq('id', id)
+      .maybeSingle(),
+    getConnectionStatus(account.id),
+  ])
 
   if (!invoice) notFound()
 
@@ -48,6 +53,12 @@ export default async function InvoiceViewPage({ params }: { params: Promise<{ id
           <PrintButton />
         </div>
       </div>
+
+      {qbStatus.connected && (
+        <div className="flex justify-end mb-4 print:hidden">
+          <SendToQuickBooksButton invoiceId={invoice.id} alreadySent={!!invoice.qb_invoice_id} />
+        </div>
+      )}
 
       <div className="bg-white rounded-2xl border border-gray-100 p-10 max-w-2xl print:border-0 print:rounded-none print:p-0 print:max-w-none">
         <div className="flex items-start justify-between mb-10">

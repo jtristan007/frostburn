@@ -54,6 +54,12 @@ export function DashboardNav({ accountName }: { accountName: string }) {
               Team
             </Link>
             <Link
+              href="/dashboard/settings/quickbooks"
+              className="text-sm text-gray-400 hover:text-white"
+            >
+              QuickBooks
+            </Link>
+            <Link
               href="/dashboard/settings/branding"
               className="text-sm text-gray-400 hover:text-white"
             >
