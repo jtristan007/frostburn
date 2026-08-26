@@ -262,7 +262,7 @@ export function FrostHero() {
 
       <header className="relative border-b border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Logo className="h-9" />
+          <Logo className="h-12" />
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm font-medium text-gray-300 hover:text-white">
               Sign in

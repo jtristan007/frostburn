@@ -25,7 +25,7 @@ export function DashboardNav({ accountName }: { accountName: string }) {
         <div className="flex items-center justify-between h-14">
           <div className="flex items-center gap-8">
             <Link href="/dashboard" className="inline-block">
-              <Logo className="h-8" />
+              <Logo className="h-10" />
             </Link>
             <nav className="hidden md:flex items-center gap-1">
               {LINKS.map((link) => {

@@ -423,7 +423,7 @@ export default function LandingPage() {
 
       <footer className="border-t border-white/10 py-8" style={{ background: '#05091a' }}>
         <div className="max-w-6xl mx-auto px-6 flex flex-col items-center gap-3">
-          <Logo className="h-7" />
+          <Logo className="h-9" />
           <p className="text-sm text-mist">Frostburn — built for small HVAC operators.</p>
           <div className="flex gap-4 text-xs text-mist">
             <Link href="/terms" className="hover:text-white">
