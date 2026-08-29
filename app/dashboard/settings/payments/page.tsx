@@ -19,9 +19,20 @@ export default async function PaymentsSettingsPage({
   // Re-sync on every load while not yet fully active -- cheapest way to stay
   // eventually-consistent without a dedicated Connect webhook pipeline (see
   // lib/stripe-connect/client.ts). Harmless no-op once status is 'active'.
+  // Wrapped: this calls Stripe with the connected account's ID, and that
+  // retrieve fails hard (crashing the whole page) if the account was
+  // created against a different Stripe key than the one currently
+  // configured -- a real scenario, not hypothetical, since a test/sandbox
+  // switch changes every existing connected account ID to something the
+  // new key has never heard of. Falls back to the last known DB status
+  // instead of taking the page down over it.
   let status = account.stripe_connect_status as string
   if (account.stripe_connect_account_id && status !== 'active') {
-    status = await syncConnectedAccountStatus(account.id, account.stripe_connect_account_id)
+    try {
+      status = await syncConnectedAccountStatus(account.id, account.stripe_connect_account_id)
+    } catch (err) {
+      console.error('Stripe Connect status sync failed:', err)
+    }
   }
 
   const copy = STATUS_COPY[status] ?? STATUS_COPY.not_connected
