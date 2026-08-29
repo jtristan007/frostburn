@@ -13,6 +13,9 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
   const { data: customer } = await supabase.from('customers').select('*').eq('id', id).maybeSingle()
   if (!customer) notFound()
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+  const portalUrl = `${siteUrl}/portal/${customer.portal_token}`
+
   const { data: equipment } = await supabase
     .from('equipment')
     .select('id, unit_type, model, serial_number, install_date, warranty_expiration, filter_due_date')
@@ -47,6 +50,14 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
           {customer.notes}
         </div>
       )}
+
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-6">
+        <p className="text-sm text-gray-500 mb-2">
+          Client portal link — {customer.name} can bookmark this to see every quote and invoice, and
+          pay online:
+        </p>
+        <code className="block text-xs bg-gray-50 rounded-lg px-3 py-2 break-all">{portalUrl}</code>
+      </div>
 
       <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Equipment</h2>
       <div className="space-y-2 mb-4">
