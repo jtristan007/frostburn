@@ -45,7 +45,13 @@ export default async function QuotesPage() {
                   <td className="px-6 py-3">
                     <span
                       className={`text-xs font-medium px-2 py-1 rounded-full ${
-                        q.status === 'sent' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'
+                        q.status === 'approved'
+                          ? 'bg-green-50 text-green-700'
+                          : q.status === 'declined'
+                            ? 'bg-red-50 text-red-600'
+                            : q.status === 'sent'
+                              ? 'bg-ice/10 text-ice-dim'
+                              : 'bg-gray-100 text-gray-500'
                       }`}
                     >
                       {q.status}

@@ -8,7 +8,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
 
   const { data: quote } = await supabase
     .from('quotes')
-    .select('id, status, total, share_token, created_at, customers(name)')
+    .select('id, status, total, share_token, created_at, responded_at, customers(name)')
     .eq('id', id)
     .maybeSingle()
 
@@ -52,7 +52,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
       <div className="bg-white rounded-2xl border border-gray-100 p-6">
         <p className="text-sm text-gray-500 mb-3">Shareable link (no login required to view):</p>
         <code className="block text-xs bg-gray-50 rounded-lg px-3 py-2 mb-4 break-all">{shareUrl}</code>
-        {quote.status === 'draft' ? (
+        {quote.status === 'draft' && (
           <form action={sendQuote.bind(null, quote.id)}>
             <button
               type="submit"
@@ -61,8 +61,17 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
               Mark as sent
             </button>
           </form>
-        ) : (
-          <p className="text-sm text-green-700 font-medium">Sent ✓</p>
+        )}
+        {quote.status === 'sent' && <p className="text-sm text-gray-500 font-medium">Sent — awaiting response</p>}
+        {quote.status === 'approved' && (
+          <p className="text-sm text-green-700 font-medium">
+            Approved ✓{quote.responded_at ? ` — ${new Date(quote.responded_at).toLocaleDateString()}` : ''}
+          </p>
+        )}
+        {quote.status === 'declined' && (
+          <p className="text-sm text-red-600 font-medium">
+            Declined{quote.responded_at ? ` — ${new Date(quote.responded_at).toLocaleDateString()}` : ''}
+          </p>
         )}
       </div>
     </div>

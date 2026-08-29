@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { getQuoteByToken } from '@/app/actions/quotes'
+import { getQuoteByToken, respondToQuote } from '@/app/actions/quotes'
 import { Logo } from '@/components/logo'
 
 export default async function PublicQuotePage({ params }: { params: Promise<{ token: string }> }) {
@@ -8,6 +8,8 @@ export default async function PublicQuotePage({ params }: { params: Promise<{ to
   if (!result) notFound()
 
   const { quote, items, customerName } = result
+  const approve = respondToQuote.bind(null, token, 'approved')
+  const decline = respondToQuote.bind(null, token, 'declined')
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6 py-16">
@@ -38,6 +40,37 @@ export default async function PublicQuotePage({ params }: { params: Promise<{ to
             <span className="text-navy">Total</span>
             <span className="text-navy">${quote.total}</span>
           </div>
+
+          {quote.status === 'approved' && (
+            <div className="mt-6 bg-green-50 border border-green-100 rounded-xl px-4 py-3 text-sm text-green-700 font-medium">
+              Approved ✓ — thanks, we&apos;ll be in touch to schedule.
+            </div>
+          )}
+          {quote.status === 'declined' && (
+            <div className="mt-6 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm text-gray-500 font-medium">
+              Declined. Changed your mind? Contact the business that sent this to you.
+            </div>
+          )}
+          {quote.status === 'sent' && (
+            <div className="mt-6 flex gap-3">
+              <form action={approve} className="flex-1">
+                <button
+                  type="submit"
+                  className="w-full text-sm font-semibold bg-ice text-navy px-4 py-3 rounded-lg hover:bg-ice-dim transition-colors"
+                >
+                  Approve
+                </button>
+              </form>
+              <form action={decline} className="flex-1">
+                <button
+                  type="submit"
+                  className="w-full text-sm font-semibold border border-gray-200 text-gray-500 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Decline
+                </button>
+              </form>
+            </div>
+          )}
         </div>
 
         <p className="mt-6 text-center text-xs text-gray-400">

@@ -66,3 +66,23 @@ export async function getQuoteByToken(token: string) {
 
   return { quote, items: items ?? [], customerName: customer?.name ?? null }
 }
+
+// Bound as the public pay-page-style form action on /quote/[token] (same
+// shape as payInvoice): the customer picks Approve or Decline, no session
+// involved, so this re-reads and validates the quote itself rather than
+// trusting the caller. Only a 'sent' quote can be responded to -- a draft
+// shouldn't be reachable by token yet, and re-deciding an already-answered
+// quote would silently overwrite the first answer.
+export async function respondToQuote(token: string, decision: 'approved' | 'declined') {
+  const admin = createAdminClient()
+  const { data: quote } = await admin.from('quotes').select('id, status').eq('share_token', token).maybeSingle()
+
+  if (quote && quote.status === 'sent') {
+    await admin
+      .from('quotes')
+      .update({ status: decision, responded_at: new Date().toISOString() })
+      .eq('id', quote.id)
+  }
+
+  redirect(`/quote/${token}`)
+}
