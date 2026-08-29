@@ -22,11 +22,13 @@ export const TIER_TECH_LIMITS: Record<Tier, number> = {
 
 // Filled in from Stripe Dashboard price IDs -- see .env.local.example.
 // Fails loudly at startup rather than silently routing to an empty
-// Checkout Session if one is missing.
+// Checkout Session if one is missing. Trimmed for the same reason as the
+// secret key in lib/stripe/client.ts -- a value pasted into a hosting
+// provider's env-var UI can carry a trailing newline.
 export const PRICE_IDS: Record<Tier, string> = {
-  starter: process.env.STRIPE_PRICE_STARTER!,
-  growth: process.env.STRIPE_PRICE_GROWTH!,
-  pro: process.env.STRIPE_PRICE_PRO!,
+  starter: process.env.STRIPE_PRICE_STARTER!.trim(),
+  growth: process.env.STRIPE_PRICE_GROWTH!.trim(),
+  pro: process.env.STRIPE_PRICE_PRO!.trim(),
 }
 
 export function tierForPriceId(priceId: string): Tier | null {

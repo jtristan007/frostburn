@@ -25,9 +25,12 @@ export async function POST(request: Request) {
   // `stripe listen` signs everything with a single secret, so
   // STRIPE_CONNECT_WEBHOOK_SECRET is unset there and this just falls
   // through to the one check -- same as before this endpoint pair existed.
-  const secrets = [process.env.STRIPE_WEBHOOK_SECRET, process.env.STRIPE_CONNECT_WEBHOOK_SECRET].filter(
-    (s): s is string => !!s
-  )
+  // Trimmed for the same reason as the secret key in lib/stripe/client.ts --
+  // a value pasted into a hosting provider's env-var UI can carry a trailing
+  // newline, which here would silently fail every signature check.
+  const secrets = [process.env.STRIPE_WEBHOOK_SECRET, process.env.STRIPE_CONNECT_WEBHOOK_SECRET]
+    .map((s) => s?.trim())
+    .filter((s): s is string => !!s)
 
   let event: Stripe.Event | undefined
   for (const secret of secrets) {
