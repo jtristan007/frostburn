@@ -28,18 +28,30 @@ async function getAccountId(): Promise<{ accountId: string; email: string | unde
 export async function createCheckoutSession(tier: Tier) {
   const { accountId, email } = await getAccountId()
 
-  const session = await stripe.checkout.sessions.create({
-    mode: 'subscription',
-    line_items: [{ price: PRICE_IDS[tier], quantity: 1 }],
-    client_reference_id: accountId,
-    customer_email: email,
-    success_url: `${siteUrl}/dashboard?checkout=success`,
-    cancel_url: `${siteUrl}/onboarding/plan?checkout=cancelled`,
-    metadata: { account_id: accountId, tier },
-  })
+  let url: string
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      line_items: [{ price: PRICE_IDS[tier], quantity: 1 }],
+      client_reference_id: accountId,
+      customer_email: email,
+      success_url: `${siteUrl}/dashboard?checkout=success`,
+      cancel_url: `${siteUrl}/onboarding/plan?checkout=cancelled`,
+      metadata: { account_id: accountId, tier },
+    })
+    if (!session.url) throw new Error('Stripe did not return a Checkout URL.')
+    url = session.url
+  } catch (err) {
+    // A Stripe failure here used to throw straight through and render the
+    // generic "this page couldn't load" screen, which hides the actual
+    // reason from both the user and anyone debugging. Send the message back
+    // to the plan page instead.
+    console.error('Stripe Checkout session creation failed:', err)
+    const message = err instanceof Error ? err.message : 'Could not start checkout.'
+    redirect(`/onboarding/plan?error=${encodeURIComponent(message)}`)
+  }
 
-  if (!session.url) throw new Error('Stripe did not return a Checkout URL.')
-  redirect(session.url)
+  redirect(url)
 }
 
 export async function createPortalSession() {

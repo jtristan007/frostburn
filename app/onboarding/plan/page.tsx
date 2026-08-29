@@ -9,7 +9,13 @@ const TECH_RANGES: Record<Tier, string> = {
   pro: '15+ techs',
 }
 
-export default function OnboardingPlanPage() {
+export default async function OnboardingPlanPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
+  const { error } = await searchParams
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-4xl">
@@ -19,6 +25,12 @@ export default function OnboardingPlanPage() {
             Your email is confirmed. Choose a plan and you&apos;re in.
           </p>
         </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 mb-6 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
         <div className="grid md:grid-cols-3 gap-6">
           {TIER_ORDER.map((tier) => (
