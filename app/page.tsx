@@ -235,15 +235,18 @@ export default function LandingPage() {
         </div>
         <div className="grid md:grid-cols-2 gap-6">
           {FEATURES.map((f) => (
-            <div
-              key={f.title}
-              className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-6 transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-[1.03] hover:shadow-xl hover:border-ice/40"
-            >
-              {f.illustration}
-              <div className="mt-5">
-                <h3 className="text-lg font-semibold text-white">{f.title}</h3>
-                <p className="text-sm text-ice-dim font-medium mt-1">{f.wit}</p>
-                <p className="text-sm text-mist mt-2">{f.body}</p>
+            <div key={f.title} className="group relative">
+              {/* glow: a soft white light behind the card, off by default,
+                  fades in on hover -- lives on the wrapper so it isn't
+                  clipped by the card's own rounded-corner + blur layers */}
+              <div className="absolute -inset-4 rounded-3xl bg-white/20 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+              <div className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-6 transition-all duration-200 ease-out group-hover:-translate-y-1 group-hover:scale-[1.03] group-hover:shadow-xl group-hover:border-ice/40">
+                {f.illustration}
+                <div className="mt-5">
+                  <h3 className="text-lg font-semibold text-white">{f.title}</h3>
+                  <p className="text-sm text-ice-dim font-medium mt-1">{f.wit}</p>
+                  <p className="text-sm text-mist mt-2">{f.body}</p>
+                </div>
               </div>
             </div>
           ))}
