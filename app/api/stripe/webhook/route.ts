@@ -30,6 +30,29 @@ export async function POST(request: Request) {
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session
+
+      // event.account is only present on events forwarded from a connected
+      // account (requires "Listen to events on Connected accounts" enabled
+      // on this endpoint in the Stripe Dashboard). A direct-charge invoice
+      // payment is the only Checkout flow Frostburn runs on a connected
+      // account -- the SaaS subscription checkout below always runs on the
+      // platform account itself, so this branch can never fire for it.
+      if (event.account) {
+        const invoiceId = session.metadata?.invoice_id
+        if (!invoiceId) break
+
+        await admin
+          .from('invoices')
+          .update({
+            status: 'paid',
+            paid_at: new Date().toISOString(),
+            stripe_payment_intent_id:
+              typeof session.payment_intent === 'string' ? session.payment_intent : null,
+          })
+          .eq('id', invoiceId)
+        break
+      }
+
       const accountId = session.client_reference_id ?? session.metadata?.account_id
       if (!accountId || !session.customer || !session.subscription) break
 

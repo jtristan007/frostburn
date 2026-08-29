@@ -20,6 +20,7 @@ const LINKS = [
 const SETTINGS_LINKS = [
   { href: '/dashboard/settings/team', label: 'Team' },
   { href: '/dashboard/settings/quickbooks', label: 'QuickBooks' },
+  { href: '/dashboard/settings/payments', label: 'Payments' },
   { href: '/dashboard/settings/branding', label: 'Branding' },
   { href: '/dashboard/settings/billing', label: 'Billing' },
 ]

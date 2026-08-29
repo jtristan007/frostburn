@@ -20,7 +20,7 @@ export default async function InvoiceViewPage({ params }: { params: Promise<{ id
     supabase
       .from('invoices')
       .select(
-        'id, invoice_number, status, issue_date, due_date, total, qb_invoice_id, customers(name, email, phone, address, city)'
+        'id, invoice_number, status, issue_date, due_date, total, qb_invoice_id, pay_token, customers(name, email, phone, address, city)'
       )
       .eq('id', id)
       .maybeSingle(),
@@ -101,6 +101,15 @@ export default async function InvoiceViewPage({ params }: { params: Promise<{ id
           </div>
         </div>
       </div>
+
+      {account.stripe_connect_charges_enabled && invoice.status !== 'paid' && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 max-w-2xl mt-6 print:hidden">
+          <p className="text-sm text-gray-500 mb-3">Pay-online link for this customer:</p>
+          <code className="block text-xs bg-gray-50 rounded-lg px-3 py-2 break-all">
+            {`${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'}/pay/${invoice.pay_token}`}
+          </code>
+        </div>
+      )}
     </div>
   )
 }
