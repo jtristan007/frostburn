@@ -11,7 +11,19 @@ import { ensureConnectedAccount, createOnboardingLink } from '@/lib/stripe-conne
 // itself.
 export async function connectStripePayments() {
   const { user, account } = await getCurrentAccount()
-  const connectedAccountId = await ensureConnectedAccount(account.id, account.name, user.email)
-  const url = await createOnboardingLink(connectedAccountId)
+
+  let url: string
+  try {
+    const connectedAccountId = await ensureConnectedAccount(account.id, account.name, user.email)
+    url = await createOnboardingLink(connectedAccountId)
+  } catch (err) {
+    // Same failure mode as the sync in the Payments page: a connected
+    // account created against one Stripe key can't be reached with a
+    // different key configured now. Surface it instead of crashing.
+    console.error('Stripe Connect onboarding failed:', err)
+    const message = err instanceof Error ? err.message : 'Could not start Stripe onboarding.'
+    redirect(`/dashboard/settings/payments?error=${encodeURIComponent(message)}`)
+  }
+
   redirect(url)
 }

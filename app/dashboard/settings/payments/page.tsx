@@ -11,10 +11,10 @@ const STATUS_COPY: Record<string, { label: string; tone: string }> = {
 export default async function PaymentsSettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ onboarding?: string }>
+  searchParams: Promise<{ onboarding?: string; error?: string }>
 }) {
   const { account } = await getCurrentAccount()
-  const { onboarding } = await searchParams
+  const { onboarding, error } = await searchParams
 
   // Re-sync on every load while not yet fully active -- cheapest way to stay
   // eventually-consistent without a dedicated Connect webhook pipeline (see
@@ -49,6 +49,10 @@ export default async function PaymentsSettingsPage({
         <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-6 text-sm text-amber-700">
           That onboarding link expired. Start again below.
         </div>
+      )}
+
+      {error && (
+        <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 mb-6 text-sm text-red-700">{error}</div>
       )}
 
       <div className="bg-white rounded-2xl border border-gray-100 p-6">
