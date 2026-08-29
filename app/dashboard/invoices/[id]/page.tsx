@@ -20,7 +20,7 @@ export default async function InvoiceViewPage({ params }: { params: Promise<{ id
     supabase
       .from('invoices')
       .select(
-        'id, invoice_number, status, issue_date, due_date, total, qb_invoice_id, pay_token, customers(name, email, phone, address, city)'
+        'id, invoice_number, status, issue_date, due_date, total, qb_invoice_id, pay_token, job_id, customers(name, email, phone, address, city)'
       )
       .eq('id', id)
       .maybeSingle(),
@@ -36,6 +36,13 @@ export default async function InvoiceViewPage({ params }: { params: Promise<{ id
     address: string | null
     city: string | null
   } | null
+
+  // A signed-off job attached to this invoice is proof of work done -- show
+  // it right on the printed invoice when there is one, same evidence a
+  // dispute or insurance claim would need months later.
+  const { data: job } = invoice.job_id
+    ? await supabase.from('jobs').select('signature_url, signed_by, signed_at').eq('id', invoice.job_id).maybeSingle()
+    : { data: null }
 
   return (
     <div>
@@ -100,6 +107,20 @@ export default async function InvoiceViewPage({ params }: { params: Promise<{ id
             <p className="text-3xl font-bold text-navy">${Number(invoice.total).toFixed(2)}</p>
           </div>
         </div>
+
+        {job?.signature_url && (
+          <div className="border-t border-gray-100 mt-6 pt-6">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Signed off by</p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={job.signature_url} alt="Customer signature" className="h-16 bg-white" />
+            {job.signed_by && (
+              <p className="text-sm text-gray-500 mt-1">
+                {job.signed_by}
+                {job.signed_at ? ` — ${new Date(job.signed_at).toLocaleDateString()}` : ''}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {account.stripe_connect_charges_enabled && invoice.status !== 'paid' && (

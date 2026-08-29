@@ -36,10 +36,19 @@ export async function deleteJob(id: string) {
   redirect('/dashboard/jobs')
 }
 
+export type CompletionPhoto = { url: string; kind: 'before' | 'after' }
+
 // Marking a job complete writes a service_history row when the job is tied
 // to a piece of equipment -- closing the loop between scheduling and the
-// per-unit service timeline, per the build plan.
-export async function completeJob(id: string) {
+// per-unit service timeline, per the build plan. Photos and a signature are
+// optional: a tech without a customer present, or without anything worth
+// photographing, can still complete the job with none of it filled in.
+// Uploads themselves happen client-side (see JobCompletionForm) straight to
+// Supabase Storage -- this action only ever receives the resulting URLs.
+export async function completeJobWithCapture(
+  id: string,
+  data: { signedBy: string | null; signatureUrl: string | null; photos: CompletionPhoto[] }
+) {
   const supabase = await createClient()
   const {
     data: { user },
@@ -47,13 +56,28 @@ export async function completeJob(id: string) {
 
   const { data: job } = await supabase
     .from('jobs')
-    .select('id, customer_id, equipment_id, job_type, notes')
+    .select('id, account_id, customer_id, equipment_id, job_type, notes')
     .eq('id', id)
     .single()
 
   if (!job) throw new Error('Job not found.')
 
-  await supabase.from('jobs').update({ status: 'complete' }).eq('id', id)
+  await supabase
+    .from('jobs')
+    .update({
+      status: 'complete',
+      signature_url: data.signatureUrl,
+      signed_by: data.signatureUrl ? data.signedBy : null,
+      signed_at: data.signatureUrl ? new Date().toISOString() : null,
+    })
+    .eq('id', id)
+
+  if (data.photos.length > 0) {
+    const { error: photosError } = await supabase.from('job_photos').insert(
+      data.photos.map((p) => ({ job_id: id, account_id: job.account_id, url: p.url, kind: p.kind }))
+    )
+    if (photosError) throw new Error(photosError.message)
+  }
 
   if (job.equipment_id) {
     await supabase.from('service_history').insert({
@@ -66,5 +90,7 @@ export async function completeJob(id: string) {
   }
 
   revalidatePath('/dashboard/jobs')
+  revalidatePath(`/dashboard/jobs/${id}`)
   revalidatePath(`/dashboard/customers/${job.customer_id}`)
+  redirect('/dashboard/jobs')
 }

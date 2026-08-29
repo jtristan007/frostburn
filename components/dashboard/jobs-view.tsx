@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { completeJob } from '@/app/actions/jobs'
 import { JobsCalendar } from '@/components/dashboard/jobs-calendar'
 
 const STATUS_COLORS: Record<string, string> = {
@@ -69,11 +68,12 @@ export function JobsView({ jobs }: { jobs: Job[] }) {
                     </td>
                     <td className="px-6 py-3 text-right">
                       {j.status !== 'complete' && j.status !== 'cancelled' && (
-                        <form action={completeJob.bind(null, j.id)}>
-                          <button type="submit" className="text-xs text-ice hover:text-ice-dim font-medium">
-                            Mark complete
-                          </button>
-                        </form>
+                        <Link
+                          href={`/dashboard/jobs/${j.id}/complete`}
+                          className="text-xs text-ice hover:text-ice-dim font-medium"
+                        >
+                          Mark complete
+                        </Link>
                       )}
                     </td>
                   </tr>
