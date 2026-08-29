@@ -17,11 +17,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 })
   }
 
-  let event: Stripe.Event
-  try {
-    event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!)
-  } catch (err) {
-    console.error('Stripe webhook signature verification failed:', err)
+  // Two different Stripe webhook endpoints point at this same URL: a regular
+  // account endpoint (SaaS subscription events, platform account) and a
+  // Connect endpoint (`connect: true` at creation -- invoice-payment events
+  // from connected accounts). Each Stripe endpoint signs with its own
+  // secret, so verification tries both rather than assuming one. Locally,
+  // `stripe listen` signs everything with a single secret, so
+  // STRIPE_CONNECT_WEBHOOK_SECRET is unset there and this just falls
+  // through to the one check -- same as before this endpoint pair existed.
+  const secrets = [process.env.STRIPE_WEBHOOK_SECRET, process.env.STRIPE_CONNECT_WEBHOOK_SECRET].filter(
+    (s): s is string => !!s
+  )
+
+  let event: Stripe.Event | undefined
+  for (const secret of secrets) {
+    try {
+      event = stripe.webhooks.constructEvent(body, signature, secret)
+      break
+    } catch {
+      // try the next secret
+    }
+  }
+
+  if (!event) {
+    console.error('Stripe webhook signature verification failed against all configured secrets')
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
