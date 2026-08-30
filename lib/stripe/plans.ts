@@ -1,3 +1,5 @@
+import { stripeEnv } from '@/lib/stripe/env'
+
 export type Tier = 'starter' | 'growth' | 'pro'
 
 export const TIER_LABELS: Record<Tier, string> = {
@@ -22,13 +24,12 @@ export const TIER_TECH_LIMITS: Record<Tier, number> = {
 
 // Filled in from Stripe Dashboard price IDs -- see .env.local.example.
 // Fails loudly at startup rather than silently routing to an empty
-// Checkout Session if one is missing. Trimmed for the same reason as the
-// secret key in lib/stripe/client.ts -- a value pasted into a hosting
-// provider's env-var UI can carry a trailing newline.
+// Checkout Session if one is missing. Whitespace-stripped for the same
+// reason as the secret key -- see lib/stripe/env.ts.
 export const PRICE_IDS: Record<Tier, string> = {
-  starter: process.env.STRIPE_PRICE_STARTER!.trim(),
-  growth: process.env.STRIPE_PRICE_GROWTH!.trim(),
-  pro: process.env.STRIPE_PRICE_PRO!.trim(),
+  starter: stripeEnv('STRIPE_PRICE_STARTER'),
+  growth: stripeEnv('STRIPE_PRICE_GROWTH'),
+  pro: stripeEnv('STRIPE_PRICE_PRO'),
 }
 
 export function tierForPriceId(priceId: string): Tier | null {
