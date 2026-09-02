@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { stripe } from '@/lib/stripe/client'
-import { PRICE_IDS, type Tier } from '@/lib/stripe/plans'
+import { PRICE_IDS, TRIAL_PERIOD_DAYS, type Tier } from '@/lib/stripe/plans'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
@@ -35,6 +35,7 @@ export async function createCheckoutSession(tier: Tier) {
       line_items: [{ price: PRICE_IDS[tier], quantity: 1 }],
       client_reference_id: accountId,
       customer_email: email,
+      subscription_data: { trial_period_days: TRIAL_PERIOD_DAYS },
       success_url: `${siteUrl}/dashboard?checkout=success`,
       cancel_url: `${siteUrl}/onboarding/plan?checkout=cancelled`,
       metadata: { account_id: accountId, tier },
