@@ -3,12 +3,9 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { stripe } from '@/lib/stripe/client'
-import { PRICE_IDS, type Tier } from '@/lib/stripe/plans'
+import { PRICE_IDS, TRIAL_PERIOD_DAYS, type Tier } from '@/lib/stripe/plans'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
-
-// Also referenced by the plan page copy -- see app/onboarding/plan/page.tsx.
-export const TRIAL_PERIOD_DAYS = 7
 
 async function getAccountId(): Promise<{ accountId: string; email: string | undefined }> {
   const supabase = await createClient()

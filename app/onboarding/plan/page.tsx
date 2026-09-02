@@ -1,5 +1,5 @@
-import { createCheckoutSession, TRIAL_PERIOD_DAYS } from '@/app/actions/billing'
-import { TIER_LABELS, TIER_PRICES, type Tier } from '@/lib/stripe/plans'
+import { createCheckoutSession } from '@/app/actions/billing'
+import { TIER_LABELS, TIER_PRICES, TRIAL_PERIOD_DAYS, type Tier } from '@/lib/stripe/plans'
 
 const TIER_ORDER: Tier[] = ['starter', 'growth', 'pro']
 

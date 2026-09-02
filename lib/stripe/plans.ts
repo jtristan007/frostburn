@@ -2,6 +2,8 @@ import { stripeEnv } from '@/lib/stripe/env'
 
 export type Tier = 'starter' | 'growth' | 'pro'
 
+export const TRIAL_PERIOD_DAYS = 7
+
 export const TIER_LABELS: Record<Tier, string> = {
   starter: 'Starter',
   growth: 'Growth',
