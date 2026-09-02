@@ -1,4 +1,4 @@
-import { createCheckoutSession } from '@/app/actions/billing'
+import { createCheckoutSession, TRIAL_PERIOD_DAYS } from '@/app/actions/billing'
 import { TIER_LABELS, TIER_PRICES, type Tier } from '@/lib/stripe/plans'
 
 const TIER_ORDER: Tier[] = ['starter', 'growth', 'pro']
@@ -22,7 +22,8 @@ export default async function OnboardingPlanPage({
         <div className="text-center mb-10">
           <h1 className="text-2xl font-bold text-navy">Pick a plan to get started</h1>
           <p className="mt-2 text-sm text-gray-500">
-            Your email is confirmed. Choose a plan and you&apos;re in.
+            Your email is confirmed. Choose a plan to start your {TRIAL_PERIOD_DAYS}-day free
+            trial -- you won&apos;t be charged until it ends.
           </p>
         </div>
 
@@ -46,7 +47,7 @@ export default async function OnboardingPlanPage({
                   type="submit"
                   className="mt-8 w-full text-sm font-semibold py-2.5 rounded-lg bg-ice text-navy hover:bg-ice-dim transition-colors"
                 >
-                  Choose {TIER_LABELS[tier]}
+                  Start free trial
                 </button>
               </div>
             </form>

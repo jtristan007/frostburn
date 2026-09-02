@@ -7,6 +7,9 @@ import { PRICE_IDS, type Tier } from '@/lib/stripe/plans'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
+// Also referenced by the plan page copy -- see app/onboarding/plan/page.tsx.
+export const TRIAL_PERIOD_DAYS = 7
+
 async function getAccountId(): Promise<{ accountId: string; email: string | undefined }> {
   const supabase = await createClient()
   const {
@@ -35,6 +38,7 @@ export async function createCheckoutSession(tier: Tier) {
       line_items: [{ price: PRICE_IDS[tier], quantity: 1 }],
       client_reference_id: accountId,
       customer_email: email,
+      subscription_data: { trial_period_days: TRIAL_PERIOD_DAYS },
       success_url: `${siteUrl}/dashboard?checkout=success`,
       cancel_url: `${siteUrl}/onboarding/plan?checkout=cancelled`,
       metadata: { account_id: accountId, tier },
