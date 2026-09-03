@@ -357,6 +357,9 @@ export default function LandingPage() {
           <h2 className="text-3xl font-display font-bold text-white">
             Flat rate. No surprises. No per-tech math.
           </h2>
+          <p className="mt-3 text-mist">
+            Every plan starts with a 7-day free trial. No charge until it ends.
+          </p>
         </div>
         <div className="grid md:grid-cols-3 gap-6">
           {TIERS.map((tier) => (
