@@ -12,12 +12,20 @@ export default async function CustomersPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-navy">Customers</h1>
-        <Link
-          href="/dashboard/customers/new"
-          className="text-sm font-semibold bg-ice text-navy px-4 py-2 rounded-lg hover:bg-ice-dim transition-colors"
-        >
-          New Customer
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard/customers/import"
+            className="text-sm font-semibold text-navy border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Import CSV
+          </Link>
+          <Link
+            href="/dashboard/customers/new"
+            className="text-sm font-semibold bg-ice text-navy px-4 py-2 rounded-lg hover:bg-ice-dim transition-colors"
+          >
+            New Customer
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
