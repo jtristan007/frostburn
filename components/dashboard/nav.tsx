@@ -13,6 +13,7 @@ const LINKS = [
   { href: '/dashboard/customers', label: 'Customers' },
   { href: '/dashboard/agreements', label: 'Agreements' },
   { href: '/dashboard/jobs', label: 'Jobs' },
+  { href: '/dashboard/dispatch', label: 'Dispatch' },
   { href: '/dashboard/invoices', label: 'Invoices' },
   { href: '/dashboard/assistant', label: 'AI Assistant' },
 ]
