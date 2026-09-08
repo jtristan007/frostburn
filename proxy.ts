@@ -12,6 +12,7 @@ const publicPaths = [
   '/portal',
   '/terms',
   '/privacy',
+  '/security',
   '/api/stripe/webhook',
   '/api/cron',
 ]

@@ -16,12 +16,12 @@ export default function PrivacyPage() {
 
       <main className="max-w-3xl mx-auto px-6 py-14">
         <h1 className="text-3xl font-bold text-navy mb-2">Privacy Policy</h1>
-        <p className="text-sm text-gray-400 mb-10">Last updated August 24, 2026</p>
+        <p className="text-sm text-gray-400 mb-10">Last updated September 7, 2026</p>
 
         <div className="space-y-8 text-sm leading-relaxed text-gray-600 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-navy [&_h2]:mb-2 [&_p+p]:mt-3 [&_ul+p]:mt-3 [&_li]:mt-1">
           <section>
             <p>
-              Frostburn (&quot;we,&quot; &quot;us&quot;) is operated by Julian Tristan. This policy explains
+              Frostburn (&quot;we,&quot; &quot;us&quot;) is operated by Spar-Tex Ventures LLC. This policy explains
               what we collect, why, and how it&apos;s handled when you use frostburn.io (the
               &quot;Service&quot;).
             </p>
@@ -106,10 +106,10 @@ export default function PrivacyPage() {
           <section>
             <h2>6. Your rights</h2>
             <p>
-              You can access, correct, export, or delete your account&apos;s data at any time from within
-              the Service, or by emailing us at the address below. If you&apos;re in a jurisdiction with
-              additional data protection rights (e.g. GDPR, CCPA), we&apos;ll honor requests consistent with
-              those laws.
+              You can view and correct most of your account&apos;s data directly in the Service. To request
+              a full export or deletion of your data, email us at the address below and we&apos;ll handle it
+              directly. If you&apos;re in a jurisdiction with additional data protection rights (e.g. GDPR,
+              CCPA), we&apos;ll honor requests consistent with those laws.
             </p>
           </section>
 

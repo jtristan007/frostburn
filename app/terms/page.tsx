@@ -16,14 +16,14 @@ export default function TermsPage() {
 
       <main className="max-w-3xl mx-auto px-6 py-14">
         <h1 className="text-3xl font-bold text-navy mb-2">Terms of Service</h1>
-        <p className="text-sm text-gray-400 mb-10">Last updated August 24, 2026</p>
+        <p className="text-sm text-gray-400 mb-10">Last updated September 7, 2026</p>
 
         <div className="space-y-8 text-sm leading-relaxed text-gray-600 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-navy [&_h2]:mb-2 [&_p+p]:mt-3">
           <section>
             <h2>1. Who we are</h2>
             <p>
-              Frostburn (&quot;Frostburn,&quot; &quot;we,&quot; &quot;us&quot;) is operated by Julian Tristan, a sole
-              proprietor. These Terms govern your access to and use of the Frostburn software (the
+              Frostburn (&quot;Frostburn,&quot; &quot;we,&quot; &quot;us&quot;) is operated by Spar-Tex Ventures LLC, a
+              limited liability company. These Terms govern your access to and use of the Frostburn software (the
               &quot;Service&quot;), available at frostburn.io.
             </p>
           </section>
@@ -115,7 +115,7 @@ export default function TermsPage() {
           <section>
             <h2>10. Limitation of liability</h2>
             <p>
-              To the maximum extent permitted by law, Frostburn and Julian Tristan will not be liable for
+              To the maximum extent permitted by law, Frostburn and Spar-Tex Ventures LLC will not be liable for
               any indirect, incidental, special, consequential, or punitive damages, or for lost profits or
               revenue, arising from your use of the Service. Our total liability for any claim relating to
               the Service is limited to the amount you paid us in the 12 months before the claim arose.

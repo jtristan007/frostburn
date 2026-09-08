@@ -439,6 +439,9 @@ export default function LandingPage() {
             <Link href="/privacy" className="hover:text-white">
               Privacy
             </Link>
+            <Link href="/security" className="hover:text-white">
+              Security
+            </Link>
           </div>
         </div>
       </footer>
