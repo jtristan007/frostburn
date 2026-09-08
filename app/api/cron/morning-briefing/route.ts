@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   // one query since the admin client isn't RLS-scoped.
   const { data: dueForRenewal } = await admin
     .from('agreements')
-    .select('id, renewal_date')
+    .select('id, account_id, customer_id, renewal_date, annual_value')
     .lte('renewal_date', todayStr)
     .neq('status', 'expired')
 
@@ -38,6 +38,17 @@ export async function GET(request: NextRequest) {
         status: 'active',
       })
       .eq('id', agreement.id)
+
+    // account_id is set explicitly here, unlike the app's own inserts --
+    // this runs on the admin client with no user session, so there's no
+    // current_account_id() to default from.
+    await admin.from('agreement_events').insert({
+      account_id: agreement.account_id,
+      agreement_id: agreement.id,
+      customer_id: agreement.customer_id,
+      event_type: 'renewed',
+      annual_value: agreement.annual_value,
+    })
   }
 
   const { data: accounts, error: accountsError } = await admin

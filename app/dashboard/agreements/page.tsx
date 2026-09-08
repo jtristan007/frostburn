@@ -29,6 +29,12 @@ export default async function AgreementsPage() {
         <h1 className="text-2xl font-bold text-navy">Maintenance Agreements</h1>
         <div className="flex items-center gap-3">
           <Link
+            href="/dashboard/agreements/retention"
+            className="text-sm font-semibold text-navy border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Retention
+          </Link>
+          <Link
             href="/dashboard/agreements/forecast"
             className="text-sm font-semibold text-navy border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
           >
