@@ -4,9 +4,18 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { stripe } from '@/lib/stripe/client'
 import { PRICE_IDS, TRIAL_PERIOD_DAYS, type Tier } from '@/lib/stripe/plans'
+import { createAccountForNewUser } from '@/app/actions/account'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
+// A confirmed, logged-in user with no account_users row is a real state
+// that has happened in production (a gap between email confirmation and
+// account creation, from before this self-heal existed) -- previously this
+// threw a raw Error that crashed straight to Next's generic "this page
+// couldn't load" screen, on the exact page (/onboarding/plan) meant to get
+// someone into a paid plan. createAccountForNewUser is idempotent and is
+// the same account-creation path signup itself uses, so retrying it here
+// is safe and fixes the user's account on the spot instead of crashing.
 async function getAccountId(): Promise<{ accountId: string; email: string | undefined }> {
   const supabase = await createClient()
   const {
@@ -18,11 +27,11 @@ async function getAccountId(): Promise<{ accountId: string; email: string | unde
     .from('account_users')
     .select('account_id')
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
-  if (!membership) throw new Error('No account found for this user.')
+  const accountId = membership?.account_id ?? (await createAccountForNewUser(user))
 
-  return { accountId: membership.account_id, email: user.email }
+  return { accountId, email: user.email }
 }
 
 export async function createCheckoutSession(tier: Tier) {
