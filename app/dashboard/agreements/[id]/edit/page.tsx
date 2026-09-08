@@ -56,6 +56,22 @@ export default async function EditAgreementPage({ params }: { params: Promise<{ 
           <input id="next_service_date" name="next_service_date" type="date" defaultValue={agreement.next_service_date ?? ''} className={inputClass} />
         </div>
         <div>
+          <label className={labelClass} htmlFor="visits_included_per_year">Included visits per year</label>
+          <input
+            id="visits_included_per_year"
+            name="visits_included_per_year"
+            type="number"
+            min={0}
+            defaultValue={agreement.visits_included_per_year}
+            className={inputClass}
+          />
+          <p className="text-xs text-gray-400 mt-1.5">
+            {agreement.visits_completed_this_period} of {agreement.visits_included_per_year} used this
+            period. Completing a job marked &quot;included under this agreement&quot; advances this
+            automatically.
+          </p>
+        </div>
+        <div>
           <label className={labelClass} htmlFor="status">Status</label>
           <select id="status" name="status" defaultValue={agreement.status} className={inputClass}>
             <option value="active">Active</option>

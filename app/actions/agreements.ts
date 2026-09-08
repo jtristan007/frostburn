@@ -14,6 +14,11 @@ function readAgreementFields(formData: FormData) {
     next_service_date: (formData.get('next_service_date') as string) || null,
     auto_remind: formData.get('auto_remind') === 'on',
     status: formData.get('status') as string,
+    visits_included_per_year: (() => {
+      const raw = formData.get('visits_included_per_year')
+      const n = raw === null || raw === '' ? NaN : Number(raw)
+      return Number.isFinite(n) && n >= 0 ? n : 2
+    })(),
   }
 }
 

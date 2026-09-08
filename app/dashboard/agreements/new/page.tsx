@@ -47,6 +47,17 @@ export default async function NewAgreementPage() {
           <input id="next_service_date" name="next_service_date" type="date" className={inputClass} />
         </div>
         <div>
+          <label className={labelClass} htmlFor="visits_included_per_year">Included visits per year</label>
+          <input
+            id="visits_included_per_year"
+            name="visits_included_per_year"
+            type="number"
+            min={0}
+            defaultValue={2}
+            className={inputClass}
+          />
+        </div>
+        <div>
           <label className={labelClass} htmlFor="status">Status</label>
           <select id="status" name="status" defaultValue="active" className={inputClass}>
             <option value="active">Active</option>

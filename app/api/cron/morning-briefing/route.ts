@@ -16,6 +16,30 @@ export async function GET(request: NextRequest) {
   const admin = createAdminClient()
   const todayStr = new Date().toISOString().slice(0, 10)
 
+  // Agreement renewal rollover: an agreement whose renewal_date has passed
+  // renews for another year and its included-visits counter resets --
+  // otherwise visits_completed_this_period would climb forever and every
+  // agreement would eventually look "used up." Runs across all accounts in
+  // one query since the admin client isn't RLS-scoped.
+  const { data: dueForRenewal } = await admin
+    .from('agreements')
+    .select('id, renewal_date')
+    .lte('renewal_date', todayStr)
+    .neq('status', 'expired')
+
+  for (const agreement of dueForRenewal ?? []) {
+    const nextRenewal = new Date(agreement.renewal_date)
+    nextRenewal.setFullYear(nextRenewal.getFullYear() + 1)
+    await admin
+      .from('agreements')
+      .update({
+        renewal_date: nextRenewal.toISOString().slice(0, 10),
+        visits_completed_this_period: 0,
+        status: 'active',
+      })
+      .eq('id', agreement.id)
+  }
+
   const { data: accounts, error: accountsError } = await admin
     .from('accounts')
     .select('id, name')
@@ -91,5 +115,5 @@ export async function GET(request: NextRequest) {
     results.push({ account: account.name, reminders: reminderCount, briefingSent })
   }
 
-  return NextResponse.json({ ok: true, results })
+  return NextResponse.json({ ok: true, agreementsRenewed: dueForRenewal?.length ?? 0, results })
 }
