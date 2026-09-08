@@ -35,6 +35,22 @@ export default async function NewAgreementPage() {
           <input id="annual_value" name="annual_value" type="number" step="0.01" required className={inputClass} />
         </div>
         <div>
+          <label className={labelClass} htmlFor="standard_visit_value">Standard visit value ($)</label>
+          <input
+            id="standard_visit_value"
+            name="standard_visit_value"
+            type="number"
+            step="0.01"
+            min={0}
+            defaultValue={150}
+            className={inputClass}
+          />
+          <p className="text-xs text-gray-400 mt-1.5">
+            What one visit would cost this customer at your normal, non-agreement rate. Used to show
+            the value of the plan vs. paying per visit.
+          </p>
+        </div>
+        <div>
           <label className={labelClass} htmlFor="start_date">Start date</label>
           <input id="start_date" name="start_date" type="date" className={inputClass} />
         </div>

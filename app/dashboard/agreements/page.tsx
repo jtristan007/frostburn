@@ -12,9 +12,16 @@ export default async function AgreementsPage() {
   const { data: agreements } = await supabase
     .from('agreements')
     .select(
-      'id, plan_tier, unit_count, annual_value, renewal_date, status, visits_included_per_year, visits_completed_this_period, customers(name)'
+      'id, plan_tier, unit_count, annual_value, renewal_date, status, visits_included_per_year, visits_completed_this_period, standard_visit_value, customers(name)'
     )
     .order('renewal_date')
+
+  const activeAgreements = (agreements ?? []).filter((a) => a.status !== 'expired')
+  const recurringRevenue = activeAgreements.reduce((sum, a) => sum + Number(a.annual_value), 0)
+  const retailValue = activeAgreements.reduce(
+    (sum, a) => sum + a.visits_included_per_year * Number(a.standard_visit_value),
+    0
+  )
 
   return (
     <div>
@@ -27,6 +34,24 @@ export default async function AgreementsPage() {
           New Agreement
         </Link>
       </div>
+
+      {activeAgreements.length > 0 && (
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="bg-white rounded-2xl border border-gray-100 p-5">
+            <div className="text-xs text-gray-400 uppercase tracking-wide">Active agreements</div>
+            <div className="text-2xl font-bold text-navy mt-1">{activeAgreements.length}</div>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-100 p-5">
+            <div className="text-xs text-gray-400 uppercase tracking-wide">Recurring revenue / yr</div>
+            <div className="text-2xl font-bold text-navy mt-1">${recurringRevenue.toLocaleString()}</div>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-100 p-5">
+            <div className="text-xs text-gray-400 uppercase tracking-wide">Retail-equivalent value / yr</div>
+            <div className="text-2xl font-bold text-navy mt-1">${retailValue.toLocaleString()}</div>
+            <div className="text-xs text-gray-400 mt-1">what these visits would cost billed individually</div>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
         {(agreements ?? []).length === 0 ? (
@@ -53,6 +78,22 @@ export default async function AgreementsPage() {
                     {a.visits_completed_this_period} / {a.visits_included_per_year} visits
                   </td>
                   <td className="px-6 py-3 text-right text-navy font-medium">${a.annual_value}/yr</td>
+                  <td className="px-6 py-3 text-right">
+                    {(() => {
+                      const retail = a.visits_included_per_year * Number(a.standard_visit_value)
+                      const diff = retail - Number(a.annual_value)
+                      if (a.visits_included_per_year === 0) return <span className="text-gray-300 text-xs">—</span>
+                      return diff >= 0 ? (
+                        <span className="text-green-600 text-xs font-medium">
+                          customer saves ${diff.toLocaleString()}/yr
+                        </span>
+                      ) : (
+                        <span className="text-amber text-xs font-medium">
+                          ${Math.abs(diff).toLocaleString()}/yr above retail
+                        </span>
+                      )
+                    })()}
+                  </td>
                 </tr>
               ))}
             </tbody>
