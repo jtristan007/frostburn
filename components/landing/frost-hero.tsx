@@ -290,13 +290,13 @@ export function FrostHero() {
             className="rise mt-6 font-display font-bold tracking-tight text-white text-5xl leading-[1.02]"
             style={{ animationDelay: '0.18s' }}
           >
-            HVAC software
+            Run your HVAC company
             <br />
-            that runs your <span className="frost-text">business.</span>
+            without hiring an <span className="frost-text">office admin.</span>
           </h1>
           <p className="rise mt-6 text-lg text-mist max-w-xl" style={{ animationDelay: '0.32s' }}>
-            While you&apos;re under a crawlspace, Frostburn is chasing your unpaid invoices,
-            tracking maintenance agreements, and keeping your schedule straight — automatically.
+            Schedule jobs, manage maintenance agreements, and collect overdue invoices from one
+            simple system built for 1–5 technician HVAC shops.
           </p>
           <div className="rise mt-9 flex items-center gap-4" style={{ animationDelay: '0.46s' }}>
             <Link

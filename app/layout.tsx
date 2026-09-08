@@ -11,9 +11,9 @@ const plexMono = IBM_Plex_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Frostburn — HVAC software that runs your business',
+  title: 'Frostburn — Run your HVAC company without hiring an office admin',
   description:
-    'Invoicing, scheduling, maintenance agreements, and a pricing book built for small HVAC operators.',
+    'Schedule jobs, manage maintenance agreements, and collect overdue invoices from one simple system built for 1–5 technician HVAC shops.',
 }
 
 export default function RootLayout({
