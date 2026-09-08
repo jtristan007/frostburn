@@ -126,3 +126,20 @@ export async function completeJobWithCapture(
   revalidatePath(`/dashboard/customers/${job.customer_id}`)
   redirect('/dashboard/jobs')
 }
+
+export type FieldStatus = 'dispatched' | 'en_route' | 'arrived'
+
+// A one-tap status bump from the dispatch board -- deliberately separate
+// from updateJob/the lifecycle `status` column, and deliberately not a
+// redirect: this gets called from a page showing many jobs at once, so it
+// should just refresh that page in place rather than bounce the dispatcher
+// off it after every tap.
+export async function updateFieldStatus(id: string, fieldStatus: FieldStatus) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('jobs')
+    .update({ field_status: fieldStatus, field_status_updated_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw new Error(error.message)
+  revalidatePath('/dashboard/dispatch')
+}
