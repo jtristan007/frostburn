@@ -8,11 +8,17 @@ const labelClass = 'block text-sm font-medium text-gray-700 mb-1.5'
 
 export default async function NewJobPage() {
   const { supabase } = await getCurrentAccount()
-  const [{ data: customers }, { data: equipment }, { data: technicians }] = await Promise.all([
-    supabase.from('customers').select('id, name').order('name'),
-    supabase.from('equipment').select('id, unit_type, model, customers(name)').order('unit_type'),
-    supabase.from('account_users').select('user_id, full_name'),
-  ])
+  const [{ data: customers }, { data: equipment }, { data: technicians }, { data: agreements }] =
+    await Promise.all([
+      supabase.from('customers').select('id, name').order('name'),
+      supabase.from('equipment').select('id, unit_type, model, customers(name)').order('unit_type'),
+      supabase.from('account_users').select('user_id, full_name'),
+      supabase
+        .from('agreements')
+        .select('id, plan_tier, customers(name)')
+        .in('status', ['active', 'due'])
+        .order('renewal_date'),
+    ])
 
   return (
     <div className="max-w-lg">
@@ -34,6 +40,21 @@ export default async function NewJobPage() {
             ))}
           </select>
         </div>
+        <div>
+          <label className={labelClass} htmlFor="agreement_id">Maintenance agreement (optional)</label>
+          <select id="agreement_id" name="agreement_id" defaultValue="" className={inputClass}>
+            <option value="">No agreement</option>
+            {(agreements ?? []).map((a) => (
+              <option key={a.id} value={a.id}>
+                {(a.customers as unknown as { name: string } | null)?.name} — {a.plan_tier}
+              </option>
+            ))}
+          </select>
+        </div>
+        <label className="flex items-center gap-2 text-sm text-gray-600">
+          <input type="checkbox" name="included_visit" className="rounded border-gray-300" />
+          Included under this agreement (not billed separately)
+        </label>
         <div>
           <label className={labelClass} htmlFor="job_type">Job type</label>
           <select id="job_type" name="job_type" defaultValue="tune-up" required className={inputClass}>

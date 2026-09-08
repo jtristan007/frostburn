@@ -10,13 +10,18 @@ const labelClass = 'block text-sm font-medium text-gray-700 mb-1.5'
 export default async function EditJobPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const { supabase } = await getCurrentAccount()
-  const [{ data: job }, { data: customers }, { data: equipment }, { data: technicians }, { data: photos }] =
+  const [{ data: job }, { data: customers }, { data: equipment }, { data: technicians }, { data: photos }, { data: agreements }] =
     await Promise.all([
       supabase.from('jobs').select('*').eq('id', id).maybeSingle(),
       supabase.from('customers').select('id, name').order('name'),
       supabase.from('equipment').select('id, unit_type, model, customers(name)').order('unit_type'),
       supabase.from('account_users').select('user_id, full_name'),
       supabase.from('job_photos').select('id, url, kind').eq('job_id', id).order('created_at'),
+      supabase
+        .from('agreements')
+        .select('id, plan_tier, customers(name)')
+        .in('status', ['active', 'due'])
+        .order('renewal_date'),
     ])
   if (!job) notFound()
 
@@ -45,6 +50,26 @@ export default async function EditJobPage({ params }: { params: Promise<{ id: st
             ))}
           </select>
         </div>
+        <div>
+          <label className={labelClass} htmlFor="agreement_id">Maintenance agreement (optional)</label>
+          <select id="agreement_id" name="agreement_id" defaultValue={job.agreement_id ?? ''} className={inputClass}>
+            <option value="">No agreement</option>
+            {(agreements ?? []).map((a) => (
+              <option key={a.id} value={a.id}>
+                {(a.customers as unknown as { name: string } | null)?.name} — {a.plan_tier}
+              </option>
+            ))}
+          </select>
+        </div>
+        <label className="flex items-center gap-2 text-sm text-gray-600">
+          <input
+            type="checkbox"
+            name="included_visit"
+            defaultChecked={job.included_visit}
+            className="rounded border-gray-300"
+          />
+          Included under this agreement (not billed separately)
+        </label>
         <div>
           <label className={labelClass} htmlFor="job_type">Job type</label>
           <select id="job_type" name="job_type" defaultValue={job.job_type} required className={inputClass}>

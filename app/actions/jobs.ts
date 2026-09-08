@@ -8,6 +8,8 @@ function readJobFields(formData: FormData) {
   return {
     customer_id: formData.get('customer_id') as string,
     equipment_id: (formData.get('equipment_id') as string) || null,
+    agreement_id: (formData.get('agreement_id') as string) || null,
+    included_visit: formData.get('included_visit') === 'on',
     job_type: formData.get('job_type') as string,
     scheduled_date: formData.get('scheduled_date') as string,
     assigned_technician_id: (formData.get('assigned_technician_id') as string) || null,
@@ -56,7 +58,7 @@ export async function completeJobWithCapture(
 
   const { data: job } = await supabase
     .from('jobs')
-    .select('id, account_id, customer_id, equipment_id, job_type, notes')
+    .select('id, account_id, customer_id, equipment_id, job_type, notes, agreement_id, included_visit')
     .eq('id', id)
     .single()
 
@@ -71,6 +73,36 @@ export async function completeJobWithCapture(
       signed_at: data.signatureUrl ? new Date().toISOString() : null,
     })
     .eq('id', id)
+
+  // An included agreement visit: bump the used-this-period count and push
+  // next_service_date forward by the agreement's own cadence (365 /
+  // visits per year), so the next visit gets scheduled roughly on time
+  // without anyone doing the date math by hand. A billable/non-agreement
+  // job on the same customer leaves the agreement untouched.
+  if (job.agreement_id && job.included_visit) {
+    const { data: agreement } = await supabase
+      .from('agreements')
+      .select('visits_included_per_year, visits_completed_this_period')
+      .eq('id', job.agreement_id)
+      .maybeSingle()
+
+    if (agreement) {
+      const intervalDays = Math.round(365 / Math.max(agreement.visits_included_per_year, 1))
+      const next = new Date()
+      next.setDate(next.getDate() + intervalDays)
+
+      await supabase
+        .from('agreements')
+        .update({
+          visits_completed_this_period: agreement.visits_completed_this_period + 1,
+          next_service_date: next.toISOString().slice(0, 10),
+        })
+        .eq('id', job.agreement_id)
+
+      revalidatePath('/dashboard/agreements')
+      revalidatePath(`/dashboard/agreements/${job.agreement_id}/edit`)
+    }
+  }
 
   if (data.photos.length > 0) {
     const { error: photosError } = await supabase.from('job_photos').insert(

@@ -11,7 +11,9 @@ export default async function AgreementsPage() {
   const { supabase } = await getCurrentAccount()
   const { data: agreements } = await supabase
     .from('agreements')
-    .select('id, plan_tier, unit_count, annual_value, renewal_date, status, customers(name)')
+    .select(
+      'id, plan_tier, unit_count, annual_value, renewal_date, status, visits_included_per_year, visits_completed_this_period, customers(name)'
+    )
     .order('renewal_date')
 
   return (
@@ -46,6 +48,9 @@ export default async function AgreementsPage() {
                     <span className={`text-xs font-medium px-2 py-1 rounded-full capitalize ${STATUS_COLORS[a.status] ?? ''}`}>
                       {a.status}
                     </span>
+                  </td>
+                  <td className="px-6 py-3 text-gray-400">
+                    {a.visits_completed_this_period} / {a.visits_included_per_year} visits
                   </td>
                   <td className="px-6 py-3 text-right text-navy font-medium">${a.annual_value}/yr</td>
                 </tr>
