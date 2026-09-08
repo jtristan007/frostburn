@@ -27,12 +27,20 @@ export default async function AgreementsPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-navy">Maintenance Agreements</h1>
-        <Link
-          href="/dashboard/agreements/new"
-          className="text-sm font-semibold bg-ice text-navy px-4 py-2 rounded-lg hover:bg-ice-dim transition-colors"
-        >
-          New Agreement
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard/agreements/forecast"
+            className="text-sm font-semibold text-navy border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Capacity Forecast
+          </Link>
+          <Link
+            href="/dashboard/agreements/new"
+            className="text-sm font-semibold bg-ice text-navy px-4 py-2 rounded-lg hover:bg-ice-dim transition-colors"
+          >
+            New Agreement
+          </Link>
+        </div>
       </div>
 
       {activeAgreements.length > 0 && (
