@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createQuoteFromCart, type CartLine } from '@/app/actions/quotes'
+import { updatePricingBookItem } from '@/app/actions/pricing-book'
 
 type Item = {
   id: string
@@ -23,6 +24,7 @@ export function PricingBookCatalog({ items }: { items: Item[] }) {
   const [query, setQuery] = useState('')
   const [cart, setCart] = useState<Record<string, number>>({})
   const [pending, startTransition] = useTransition()
+  const [editingId, setEditingId] = useState<string | null>(null)
   const router = useRouter()
 
   const filtered = items.filter(
@@ -87,7 +89,53 @@ export function PricingBookCatalog({ items }: { items: Item[] }) {
                     )}
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold text-navy">${item.price}</span>
+                    {editingId === item.id ? (
+                      <form
+                        action={async (formData) => {
+                          await updatePricingBookItem(item.id, formData)
+                          setEditingId(null)
+                        }}
+                        className="flex items-center gap-1"
+                      >
+                        {/* This item is only ever shown here because the page query already
+                            filters to active=true -- always resubmitting 'on' keeps this
+                            price-only edit from silently deactivating the item, since
+                            updatePricingBookItem writes whatever `active` it's given. */}
+                        <input type="hidden" name="active" value="on" />
+                        <span className="text-sm text-gray-400">$</span>
+                        <input
+                          type="number"
+                          name="price"
+                          step="0.01"
+                          min={0}
+                          defaultValue={item.price}
+                          autoFocus
+                          className="w-20 px-2 py-1 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-ice focus:border-transparent"
+                        />
+                        <button
+                          type="submit"
+                          className="text-xs font-semibold text-ice hover:text-ice-dim px-1.5 py-1"
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingId(null)}
+                          className="text-xs text-gray-400 hover:text-gray-600 px-1.5 py-1"
+                        >
+                          Cancel
+                        </button>
+                      </form>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setEditingId(item.id)}
+                        title="Edit price"
+                        className="text-sm font-semibold text-navy hover:text-ice transition-colors"
+                      >
+                        ${item.price}
+                      </button>
+                    )}
                     <input
                       type="number"
                       min={0}
