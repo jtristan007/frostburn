@@ -3,6 +3,15 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
+// A plain Number(...) || fallback would silently turn an intentional 0 into
+// fallback, since 0 is falsy in JS -- matters here because "0 included
+// visits" and "$0 standard visit value" are both legitimate inputs.
+function parseNonNegative(formData: FormData, key: string, fallback: number): number {
+  const raw = formData.get(key)
+  const n = raw === null || raw === '' ? NaN : Number(raw)
+  return Number.isFinite(n) && n >= 0 ? n : fallback
+}
+
 function readAgreementFields(formData: FormData) {
   return {
     customer_id: formData.get('customer_id') as string,
@@ -14,11 +23,8 @@ function readAgreementFields(formData: FormData) {
     next_service_date: (formData.get('next_service_date') as string) || null,
     auto_remind: formData.get('auto_remind') === 'on',
     status: formData.get('status') as string,
-    visits_included_per_year: (() => {
-      const raw = formData.get('visits_included_per_year')
-      const n = raw === null || raw === '' ? NaN : Number(raw)
-      return Number.isFinite(n) && n >= 0 ? n : 2
-    })(),
+    visits_included_per_year: parseNonNegative(formData, 'visits_included_per_year', 2),
+    standard_visit_value: parseNonNegative(formData, 'standard_visit_value', 150),
   }
 }
 

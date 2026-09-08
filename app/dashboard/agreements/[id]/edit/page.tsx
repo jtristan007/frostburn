@@ -16,9 +16,39 @@ export default async function EditAgreementPage({ params }: { params: Promise<{ 
   ])
   if (!agreement) notFound()
 
+  const retailAnnualValue = agreement.visits_included_per_year * Number(agreement.standard_visit_value)
+  const diff = retailAnnualValue - Number(agreement.annual_value)
+
   return (
     <div className="max-w-lg">
       <h1 className="text-2xl font-bold text-navy mb-6">Edit Agreement</h1>
+
+      {agreement.visits_included_per_year > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-4 text-sm">
+          <div className="flex justify-between text-gray-600">
+            <span>Retail value ({agreement.visits_included_per_year} visits × ${agreement.standard_visit_value})</span>
+            <span className="font-medium text-navy">${retailAnnualValue.toLocaleString()}/yr</span>
+          </div>
+          <div className="flex justify-between text-gray-600 mt-1.5">
+            <span>Price charged</span>
+            <span className="font-medium text-navy">${Number(agreement.annual_value).toLocaleString()}/yr</span>
+          </div>
+          <div className="border-t border-gray-100 mt-2.5 pt-2.5 flex justify-between font-medium">
+            {diff >= 0 ? (
+              <>
+                <span className="text-green-700">Customer saves vs. paying per visit</span>
+                <span className="text-green-700">${diff.toLocaleString()}/yr</span>
+              </>
+            ) : (
+              <>
+                <span className="text-amber">Priced above retail — consider lowering, or the value beyond visits (priority service, no dispatch fee) should be worth the difference</span>
+                <span className="text-amber whitespace-nowrap">${Math.abs(diff).toLocaleString()}/yr</span>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <form
         action={updateAgreement.bind(null, id)}
         className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4"
@@ -42,6 +72,21 @@ export default async function EditAgreementPage({ params }: { params: Promise<{ 
         <div>
           <label className={labelClass} htmlFor="annual_value">Annual value ($)</label>
           <input id="annual_value" name="annual_value" type="number" step="0.01" defaultValue={agreement.annual_value} required className={inputClass} />
+        </div>
+        <div>
+          <label className={labelClass} htmlFor="standard_visit_value">Standard visit value ($)</label>
+          <input
+            id="standard_visit_value"
+            name="standard_visit_value"
+            type="number"
+            step="0.01"
+            min={0}
+            defaultValue={agreement.standard_visit_value}
+            className={inputClass}
+          />
+          <p className="text-xs text-gray-400 mt-1.5">
+            What one visit would cost this customer at your normal, non-agreement rate.
+          </p>
         </div>
         <div>
           <label className={labelClass} htmlFor="start_date">Start date</label>
