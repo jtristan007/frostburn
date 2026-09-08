@@ -305,7 +305,7 @@ export function FrostHero() {
             >
               Start Free Today →
             </Link>
-            <a href="#pricing" className="text-sm font-semibold text-white px-5 py-3 rounded-lg border border-white/15">
+            <a href="#how-it-works" className="text-sm font-semibold text-white px-5 py-3 rounded-lg border border-white/15">
               See how it works
             </a>
           </div>

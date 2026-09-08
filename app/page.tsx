@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Logo } from '@/components/logo'
 import { FrostHero } from '@/components/landing/frost-hero'
+import { TRIAL_PERIOD_DAYS } from '@/lib/stripe/plans'
 
 const TIERS = [
   {
@@ -223,7 +224,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 py-24">
+      <section id="how-it-works" className="max-w-6xl mx-auto px-6 py-24">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <p className="font-mono text-[11px] font-medium text-ice uppercase tracking-[0.14em] mb-3">
             What Frostburn does
@@ -358,7 +359,7 @@ export default function LandingPage() {
             Flat rate. No surprises. No per-tech math.
           </h2>
           <p className="mt-3 text-mist">
-            Every plan starts with a 7-day free trial. No charge until it ends.
+            Every plan starts with a {TRIAL_PERIOD_DAYS}-day free trial. No charge until it ends.
           </p>
         </div>
         <div className="grid md:grid-cols-3 gap-6">
