@@ -30,15 +30,42 @@ function readAgreementFields(formData: FormData) {
 
 export async function createAgreement(formData: FormData) {
   const supabase = await createClient()
-  const { error } = await supabase.from('agreements').insert(readAgreementFields(formData))
-  if (error) throw new Error(error.message)
+  const fields = readAgreementFields(formData)
+  const { data, error } = await supabase.from('agreements').insert(fields).select('id').single()
+  if (error || !data) throw new Error(error?.message ?? 'Could not create agreement.')
+
+  await supabase.from('agreement_events').insert({
+    agreement_id: data.id,
+    customer_id: fields.customer_id,
+    event_type: 'created',
+    annual_value: fields.annual_value,
+  })
+
   redirect('/dashboard/agreements')
 }
 
 export async function updateAgreement(id: string, formData: FormData) {
   const supabase = await createClient()
-  const { error } = await supabase.from('agreements').update(readAgreementFields(formData)).eq('id', id)
+  const fields = readAgreementFields(formData)
+
+  // Fetch the prior status first -- only a genuine active/due -> expired
+  // transition is a cancellation worth logging. Without this check, every
+  // edit to an already-expired agreement (or re-saving the same status)
+  // would log a duplicate cancellation event.
+  const { data: existing } = await supabase.from('agreements').select('status').eq('id', id).maybeSingle()
+
+  const { error } = await supabase.from('agreements').update(fields).eq('id', id)
   if (error) throw new Error(error.message)
+
+  if (existing && existing.status !== 'expired' && fields.status === 'expired') {
+    await supabase.from('agreement_events').insert({
+      agreement_id: id,
+      customer_id: fields.customer_id,
+      event_type: 'cancelled',
+      annual_value: fields.annual_value,
+    })
+  }
+
   redirect('/dashboard/agreements')
 }
 
