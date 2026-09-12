@@ -1,5 +1,5 @@
 import { getCurrentAccount } from '@/lib/account'
-import { syncConnectedAccountStatus } from '@/lib/stripe-connect/client'
+import { CONNECT_COUNTRIES, syncConnectedAccountStatus } from '@/lib/stripe-connect/client'
 import { connectStripePayments } from '@/app/actions/stripe-connect'
 
 const STATUS_COPY: Record<string, { label: string; tone: string }> = {
@@ -72,7 +72,23 @@ export default async function PaymentsSettingsPage({
                 ? "You've started but Stripe still needs a bit more information before you can accept payments."
                 : "You'll be sent to Stripe to set up (or connect) your own account."}
             </p>
-            <form action={connectStripePayments}>
+            <form action={connectStripePayments} className="flex items-end gap-3">
+              {status === 'not_connected' && (
+                <label className="text-xs text-gray-500">
+                  Country
+                  <select
+                    name="country"
+                    defaultValue="us"
+                    className="block mt-1 text-sm border border-gray-200 rounded-lg px-3 py-2 text-navy"
+                  >
+                    {CONNECT_COUNTRIES.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <button
                 type="submit"
                 className="text-sm font-semibold bg-ice text-navy px-4 py-2 rounded-lg hover:bg-ice-dim transition-colors"
