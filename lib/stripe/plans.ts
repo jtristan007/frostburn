@@ -16,12 +16,21 @@ export const TIER_PRICES: Record<Tier, number> = {
   pro: 499,
 }
 
-// The tier names on the pricing page ("1-3 techs", "4-15 techs", "15+
-// techs") -- enforced here when inviting a teammate, not just labeling.
+// Enforced here when inviting a teammate, not just labeling -- keep in
+// sync with TIER_TECH_RANGE_LABELS below.
 export const TIER_TECH_LIMITS: Record<Tier, number> = {
-  starter: 3,
+  starter: 5,
   growth: 15,
   pro: Infinity,
+}
+
+// Single source of truth for the technician-count range shown on the
+// homepage pricing cards and the onboarding plan picker -- previously
+// duplicated (and drifted out of sync) across both pages.
+export const TIER_TECH_RANGE_LABELS: Record<Tier, string> = {
+  starter: '1–5 techs',
+  growth: '6–15 techs',
+  pro: '16+ techs',
 }
 
 // Filled in from Stripe Dashboard price IDs -- see .env.local.example.

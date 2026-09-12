@@ -1,13 +1,13 @@
 import { createCheckoutSession } from '@/app/actions/billing'
-import { TIER_LABELS, TIER_PRICES, TRIAL_PERIOD_DAYS, type Tier } from '@/lib/stripe/plans'
+import {
+  TIER_LABELS,
+  TIER_PRICES,
+  TIER_TECH_RANGE_LABELS,
+  TRIAL_PERIOD_DAYS,
+  type Tier,
+} from '@/lib/stripe/plans'
 
 const TIER_ORDER: Tier[] = ['starter', 'growth', 'pro']
-
-const TECH_RANGES: Record<Tier, string> = {
-  starter: '1–3 techs',
-  growth: '4–15 techs',
-  pro: '15+ techs',
-}
 
 export default async function OnboardingPlanPage({
   searchParams,
@@ -38,7 +38,7 @@ export default async function OnboardingPlanPage({
             <form key={tier} action={createCheckoutSession.bind(null, tier)}>
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 h-full flex flex-col">
                 <h3 className="text-lg font-semibold text-navy">{TIER_LABELS[tier]}</h3>
-                <p className="text-sm text-gray-400 mt-1">{TECH_RANGES[tier]}</p>
+                <p className="text-sm text-gray-400 mt-1">{TIER_TECH_RANGE_LABELS[tier]}</p>
                 <p className="mt-4">
                   <span className="text-4xl font-bold text-navy">${TIER_PRICES[tier]}</span>
                   <span className="text-gray-400 text-sm">/mo</span>

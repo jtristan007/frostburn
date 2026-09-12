@@ -264,6 +264,12 @@ export function FrostHero() {
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Logo className="h-12" />
           <div className="flex items-center gap-4">
+            <a
+              href="mailto:j_tristan@me.com?subject=Book%20a%2015-minute%20walkthrough"
+              className="hidden sm:inline text-sm font-medium text-gray-300 hover:text-white"
+            >
+              Book a 15-min walkthrough
+            </a>
             <Link href="/login" className="text-sm font-medium text-gray-300 hover:text-white">
               Sign in
             </Link>
