@@ -1,164 +1,162 @@
 import Link from 'next/link'
 import { Logo } from '@/components/logo'
 import { FrostHero } from '@/components/landing/frost-hero'
-import { TRIAL_PERIOD_DAYS } from '@/lib/stripe/plans'
+import { TIER_TECH_RANGE_LABELS, TRIAL_PERIOD_DAYS } from '@/lib/stripe/plans'
 
+// Every tier gets the complete platform -- quotes, dispatch, invoicing,
+// payments, agreements, QuickBooks, all of it. Nothing here is feature-gated
+// in the app; the only real difference between tiers is crew size and
+// support response time, so the copy says that instead of inventing
+// exclusive features that don't exist in the product.
 const TIERS = [
   {
     name: 'Starter',
     price: 149,
-    techs: '1–3 techs',
+    techs: TIER_TECH_RANGE_LABELS.starter,
     features: [
-      'Pricing book & quotes',
-      'Equipment history',
-      'Scheduling',
+      'The complete platform, no paywalls',
+      'Quotes, dispatch, invoicing & payments',
+      'Maintenance agreements & QuickBooks sync',
       'Email support',
     ],
   },
   {
     name: 'Growth',
     price: 299,
-    techs: '4–15 techs',
+    techs: TIER_TECH_RANGE_LABELS.growth,
     popular: true,
     features: [
       'Everything in Starter',
-      'Maintenance agreement tracking',
-      'Filter & warranty alerts',
-      'Priority support',
+      'Built for a bigger crew to coordinate',
+      'Priority support — faster response',
+      'Same flat rate, no per-tech math',
     ],
   },
   {
     name: 'Pro',
     price: 499,
-    techs: '15+ techs',
+    techs: TIER_TECH_RANGE_LABELS.pro,
     features: [
       'Everything in Growth',
-      'Multi-location dashboard',
-      'Advanced analytics',
-      'Dedicated account manager',
+      'Direct line to the person who builds it',
+      'First look at new features',
+      'Help migrating your existing data',
     ],
   },
 ]
 
-const FEATURES = [
+// The actual workflow the product runs, in order -- replaces the old
+// generic 4-feature grid (Invoicing/Scheduling/Client Mgmt/Reports), which
+// didn't show quote approvals, dispatching, photos, signatures, the
+// customer portal, or QuickBooks at all. Every claim below maps to a real,
+// shipped flow in the app, not aspirational copy.
+const WORKFLOW = [
   {
-    title: 'Invoicing & Payments',
-    wit: '"Chase money, not memories."',
-    body: 'Send professional invoices in seconds. Automatic reminders go out on overdue accounts without you making a single awkward call.',
+    step: '1',
+    title: 'Quote',
+    wit: '"Send it. They approve it. No phone tag."',
+    body: 'Build a quote from your pricing book and send a link. The customer approves or declines right from their phone — no account, no app, no chasing them down for a callback.',
+    illustration: (
+      <div className="rounded-xl bg-navy-mid border border-white/10 p-4">
+        <div className="text-[11px] text-gray-400 mb-3">Quote #204 · Rivera Residence</div>
+        <div className="space-y-2 text-xs text-gray-300 mb-3">
+          <div className="flex justify-between">
+            <span>AC Tune-up + filter replacement</span>
+            <span className="font-semibold text-white">$310</span>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <span className="flex-1 text-center text-xs font-semibold text-navy bg-ice rounded-lg py-2">Approve</span>
+          <span className="flex-1 text-center text-xs font-semibold text-mist border border-white/15 rounded-lg py-2">Decline</span>
+        </div>
+      </div>
+    ),
+  },
+  {
+    step: '2',
+    title: 'Schedule',
+    wit: '"Every job, every tech, one board."',
+    body: 'Assign the job and it lands on your dispatch board. Your crew moves through Dispatched → En Route → Arrived with one tap, so you always know where everyone actually is.',
+    illustration: (
+      <div className="rounded-xl bg-navy-mid border border-white/10 p-4">
+        <div className="text-[11px] text-gray-400 mb-3">📍 Dispatch board · Today</div>
+        <div className="space-y-2 text-xs">
+          {[
+            ['Mike', 'Johnson Family', 'En route', 'bg-amber-400/20 text-amber-300'],
+            ['Dana', 'Chen Install', 'Arrived', 'bg-green-400/20 text-green-300'],
+            ['Luis', 'Smith Emergency', 'Dispatched', 'bg-ice/20 text-ice'],
+          ].map(([tech, job, status, c]) => (
+            <div key={tech} className="flex items-center justify-between">
+              <span className="text-gray-300">{tech} · {job}</span>
+              <span className={`rounded px-2 py-0.5 font-medium ${c}`}>{status}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  },
+  {
+    step: '3',
+    title: 'Complete',
+    wit: '"Proof it happened, without a callback."',
+    body: 'Your tech snaps before/after photos and captures a signature right on the job screen — from a phone, in the driveway. It stays attached to the job record for good.',
+    illustration: (
+      <div className="rounded-xl bg-navy-mid border border-white/10 p-4">
+        <div className="text-[11px] text-gray-400 mb-3">📸 Job completion · Rivera Residence</div>
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <div className="rounded bg-white/5 border border-white/10 h-12 flex items-center justify-center text-[10px] text-mist">Before photo</div>
+          <div className="rounded bg-white/5 border border-white/10 h-12 flex items-center justify-center text-[10px] text-mist">After photo</div>
+        </div>
+        <div className="rounded bg-white/5 border border-white/10 h-8 flex items-center px-3 text-[10px] text-mist italic">✓ Signed by customer</div>
+      </div>
+    ),
+  },
+  {
+    step: '4',
+    title: 'Invoice',
+    wit: '"The invoice writes itself."',
+    body: "Completing the job generates the invoice from your pricing book automatically. One click sends it to QuickBooks too — no retyping line items into another system.",
     illustration: (
       <div className="rounded-xl bg-navy-mid border border-white/10 p-4">
         <div className="flex items-center justify-between text-[11px] text-gray-400 mb-3">
-          <span className="font-bold text-ice">❄ FROSTBURN</span>
-          <span>Invoice #1082 · Due Jun 15</span>
+          <span>Invoice #1082 · $1,840</span>
         </div>
-        <div className="space-y-2 text-xs text-gray-300">
-          <div className="flex justify-between">
-            <span>AC Unit Installation</span>
-            <span className="font-semibold text-white">$1,200</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Labor (3 hrs @ $150)</span>
-            <span className="font-semibold text-white">$450</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Refrigerant + Materials</span>
-            <span className="font-semibold text-white">$190</span>
-          </div>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-gray-300">Auto-generated from job record</span>
         </div>
-        <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between">
-          <div>
-            <div className="text-[10px] uppercase tracking-wide text-gray-500">Total due</div>
-            <div className="text-lg font-bold text-ice">$1,840</div>
-          </div>
-          <span className="text-xs font-bold text-green-400 border border-green-400/40 rounded px-2 py-1">
-            ✓ PAID
-          </span>
+        <div className="mt-3 pt-3 border-t border-white/10 text-xs font-semibold text-green-400 flex items-center gap-1.5">
+          ✓ Sent to QuickBooks
         </div>
       </div>
     ),
   },
   {
-    title: 'Scheduling & Jobs',
-    wit: '"Be everywhere at once. Without the clone."',
-    body: 'Recurring maintenance, emergency calls, seasonal tune-ups. Your crew knows exactly where to be, what to bring, and what was done last visit.',
+    step: '5',
+    title: 'Collect',
+    wit: '"Chase money, not memories."',
+    body: 'Customers pay online from their portal link — card on file, no checks in the mail, no awkward follow-up calls. Overdue reminders go out automatically if they don\'t.',
     illustration: (
       <div className="rounded-xl bg-navy-mid border border-white/10 p-4">
-        <div className="text-[11px] text-gray-400 mb-3">📅 Week of Jul 7 – 11</div>
-        <div className="grid grid-cols-5 gap-1.5 text-[10px]">
-          {[
-            { d: 'MON', jobs: [{ t: 'AC Tune-up\nRivera', c: 'bg-ice/20 text-ice' }, { t: 'Heater\nJohnson', c: 'bg-amber-400/20 text-amber-300' }] },
-            { d: 'TUE', jobs: [{ t: 'PM Visit\n3 stops', c: 'bg-green-400/20 text-green-300' }] },
-            { d: 'WED', jobs: [{ t: 'Install\nChen', c: 'bg-ice/20 text-ice' }, { t: 'Inspect\nLopez', c: 'bg-ice/20 text-ice' }] },
-            { d: 'THU', jobs: [{ t: '🚨 Emergency\nSmith', c: 'bg-red-400/20 text-red-300 ring-1 ring-red-400' }, { t: 'PM Visit', c: 'bg-green-400/20 text-green-300' }] },
-            { d: 'FRI', jobs: [{ t: 'Service\n4 jobs', c: 'bg-green-400/20 text-green-300' }] },
-          ].map((day) => (
-            <div key={day.d} className="space-y-1">
-              <div className="text-gray-500 font-semibold text-center">{day.d}</div>
-              {day.jobs.map((j, i) => (
-                <div key={i} className={`rounded px-1 py-1 leading-tight font-medium whitespace-pre-line ${j.c}`}>
-                  {j.t}
-                </div>
-              ))}
-            </div>
-          ))}
+        <div className="text-[11px] text-gray-400 mb-3">Customer portal · Johnson Family</div>
+        <div className="flex items-center justify-between text-xs text-gray-300 mb-2">
+          <span>Invoice #1082</span>
+          <span className="text-xs font-bold text-green-400 border border-green-400/40 rounded px-2 py-0.5">✓ PAID</span>
         </div>
+        <div className="text-[10px] text-mist">Paid online · card on file</div>
       </div>
     ),
   },
   {
-    title: 'Client Management',
-    wit: '"Every handshake. Every detail. On file."',
-    body: "Full history for every customer — equipment installed, service dates, warranty info, last tech's notes. New clients onboarded automatically the moment they sign up.",
+    step: '6',
+    title: 'Renew',
+    wit: '"The maintenance plan that renews itself."',
+    body: 'Maintenance agreements track visits and renewal dates on their own. When it\'s time, Frostburn reminds the customer and rolls the agreement into its next year automatically.',
     illustration: (
       <div className="rounded-xl bg-navy-mid border border-white/10 p-4">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-ice to-blue-600 flex items-center justify-center text-sm font-bold text-white">
-            J
-          </div>
-          <div>
-            <div className="text-sm font-semibold text-white">Johnson Family</div>
-            <div className="text-[11px] text-amber-300">⭐ Premium · Since 2021</div>
-          </div>
-        </div>
+        <div className="text-[11px] text-gray-400 mb-3">📋 Annual maintenance plan</div>
         <div className="space-y-1.5 text-[11px] text-gray-300">
-          <div>🌡️ Lennox 3-ton unit · Installed Mar 2022</div>
-          <div>🔧 Last service: June 30 · Tech: Mike</div>
-          <div>📋 Annual maintenance plan · Active</div>
-          <div>💰 Lifetime value: $6,840 · 0 late pays</div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    title: 'Reports',
-    wit: '"Know your numbers without doing the math."',
-    body: 'Revenue at risk, monthly totals, active clients — all live, all in one glance. No spreadsheets required.',
-    illustration: (
-      <div className="rounded-xl bg-navy-mid border border-white/10 p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="text-[11px] text-gray-400">Monthly Revenue</div>
-          <div className="text-right">
-            <div className="text-lg font-bold text-white">$18,400</div>
-            <div className="text-[10px] text-green-400 font-semibold">↑ 23% vs last month</div>
-          </div>
-        </div>
-        <div className="flex items-end gap-2 h-16">
-          {[
-            { h: 38, m: 'Feb' },
-            { h: 44, m: 'Mar' },
-            { h: 35, m: 'Apr' },
-            { h: 52, m: 'May' },
-            { h: 48, m: 'Jun' },
-            { h: 67, m: 'Jul', bright: true },
-          ].map((b) => (
-            <div key={b.m} className="flex-1 flex flex-col items-center gap-1">
-              <div
-                className={`w-full rounded-sm ${b.bright ? 'bg-ice' : 'bg-white/15'}`}
-                style={{ height: `${b.h}px` }}
-              />
-              <div className={`text-[9px] ${b.bright ? 'text-ice font-bold' : 'text-gray-500'}`}>{b.m}</div>
-            </div>
-          ))}
+          <div>3 of 4 visits used this period</div>
+          <div>Renews in 14 days · auto-reminder queued</div>
         </div>
       </div>
     ),
@@ -227,30 +225,55 @@ export default function LandingPage() {
       <section id="how-it-works" className="max-w-6xl mx-auto px-6 py-24">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <p className="font-mono text-[11px] font-medium text-ice uppercase tracking-[0.14em] mb-3">
-            What Frostburn does
+            How it actually works
           </p>
-          <h2 className="text-3xl font-display font-bold text-white">One platform. Everything handled.</h2>
+          <h2 className="text-3xl font-display font-bold text-white">
+            The office work handled.
+            <br />
+            The HVAC work stays yours.
+          </h2>
           <p className="mt-3 text-mist">
-            From the first call to the final payment — and all the follow-up in between.
+            One job, start to finish — quote, schedule, complete, invoice, collect, renew.
           </p>
         </div>
-        <div className="grid md:grid-cols-2 gap-6">
-          {FEATURES.map((f) => (
+        <div className="grid md:grid-cols-3 gap-6">
+          {WORKFLOW.map((f) => (
             <div key={f.title} className="group relative">
               {/* glow: a soft white light behind the card, off by default,
                   fades in on hover -- lives on the wrapper so it isn't
                   clipped by the card's own rounded-corner + blur layers */}
               <div className="absolute -inset-4 rounded-3xl bg-white/20 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
               <div className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-6 transition-all duration-200 ease-out group-hover:-translate-y-1 group-hover:scale-[1.03] group-hover:shadow-xl group-hover:border-ice/40">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="w-6 h-6 rounded-full bg-ice/15 border border-ice/40 text-ice text-[11px] font-mono font-semibold flex items-center justify-center">
+                    {f.step}
+                  </span>
+                  <h3 className="text-lg font-semibold text-white">{f.title}</h3>
+                </div>
                 {f.illustration}
                 <div className="mt-5">
-                  <h3 className="text-lg font-semibold text-white">{f.title}</h3>
-                  <p className="text-sm text-ice-dim font-medium mt-1">{f.wit}</p>
+                  <p className="text-sm text-ice-dim font-medium">{f.wit}</p>
                   <p className="text-sm text-mist mt-2">{f.body}</p>
                 </div>
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="max-w-4xl mx-auto px-6 py-16">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-8 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+          <div className="w-14 h-14 shrink-0 rounded-full bg-gradient-to-br from-ice to-blue-600 flex items-center justify-center text-lg font-bold text-white">
+            ❄
+          </div>
+          <div>
+            <h3 className="text-base font-semibold text-white">Built and run by one person</h3>
+            <p className="text-sm text-mist mt-1.5">
+              Frostburn isn&apos;t a call center or a team of account reps — it&apos;s one person
+              who writes the code and answers the emails. If you have a question, a bug report, or
+              anything else, you&apos;re talking directly to the person who built it.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -361,6 +384,9 @@ export default function LandingPage() {
           <p className="mt-3 text-mist">
             Every plan starts with a {TRIAL_PERIOD_DAYS}-day free trial. No charge until it ends.
           </p>
+          <p className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-amber-300 bg-amber-400/10 border border-amber-400/30 rounded-full px-4 py-1.5">
+            🔒 Founding customer pricing — lock in this rate for as long as you stay subscribed.
+          </p>
         </div>
         <div className="grid md:grid-cols-3 gap-6">
           {TIERS.map((tier) => (
@@ -413,13 +439,19 @@ export default function LandingPage() {
             Set up your pricing book, add your first client, and let the follow-up happen on its
             own.
           </p>
-          <div className="mt-8">
+          <div className="mt-8 flex items-center justify-center gap-4 flex-wrap">
             <Link
               href="/signup"
               className="inline-block text-sm font-semibold bg-ice text-navy px-6 py-3 rounded-lg hover:bg-ice-dim transition-colors"
             >
               Get Started Free →
             </Link>
+            <a
+              href="mailto:j_tristan@me.com?subject=Book%20a%2015-minute%20walkthrough"
+              className="inline-block text-sm font-semibold text-white px-6 py-3 rounded-lg border border-white/15 hover:bg-white/5 transition-colors"
+            >
+              Book a 15-min walkthrough
+            </a>
           </div>
           <p className="mt-6 text-xs text-mist">
             🍎 iPhone &nbsp;·&nbsp; 🤖 Android &nbsp;·&nbsp; 💻 Desktop &nbsp;·&nbsp; 📱 Tablet
