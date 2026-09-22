@@ -230,6 +230,7 @@ export default function BlogPost() {
           >
             Try Frostburn Free →
           </Link>
+          <p className="text-white/40 text-xs mt-8">Created by Dragonwire.ai</p>
         </div>
       </div>
     </div>
