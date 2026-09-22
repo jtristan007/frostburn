@@ -447,6 +447,7 @@ export default function LandingPage() {
               Security
             </Link>
           </div>
+          <p className="text-xs text-mist/40 mt-2">Created by Dragonwire.ai</p>
         </div>
       </footer>
     </div>
