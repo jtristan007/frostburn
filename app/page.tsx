@@ -179,6 +179,10 @@ export default function LandingPage() {
         }}
       />
 
+      <h1 className="sr-only">
+        HVAC Invoicing & Job Scheduling Software for Small Contractors | Frostburn
+      </h1>
+
       <FrostHero />
 
       <div className="border-t border-white/10 py-5">
@@ -445,6 +449,7 @@ export default function LandingPage() {
               Security
             </Link>
           </div>
+          <p className="text-xs text-mist/40 mt-2">Created by Dragonwire.ai</p>
         </div>
       </footer>
     </div>
