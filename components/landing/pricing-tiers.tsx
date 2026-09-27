@@ -17,7 +17,7 @@ export function PricingTiers({ tiers }: { tiers: Tier[] }) {
   return (
     <div className="grid md:grid-cols-3 gap-6">
       {tiers.map((tier, i) => {
-        const highlighted = tier.popular || (hovered !== null && hovered !== i)
+        const highlighted = tier.popular || hovered === i
         return (
           <div
             key={tier.name}
