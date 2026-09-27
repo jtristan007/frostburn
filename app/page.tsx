@@ -363,10 +363,12 @@ export default function LandingPage() {
           </p>
         </div>
         <div className="grid md:grid-cols-3 gap-6">
-          {TIERS.map((tier) => (
+          {TIERS.map((tier, i) => (
             <div
               key={tier.name}
-              className={`rounded-2xl border p-8 backdrop-blur-sm relative ${
+              className={`rounded-2xl border p-8 backdrop-blur-sm relative transition-colors ${
+                i === 0 ? 'peer' : 'peer-hover:border-ice/50 peer-hover:bg-ice/[0.06] peer-hover:shadow-[0_0_50px_-12px_rgba(56,189,248,0.5)]'
+              } ${
                 tier.popular
                   ? 'border-ice/50 bg-ice/[0.06] shadow-[0_0_50px_-12px_rgba(56,189,248,0.5)]'
                   : 'border-white/10 bg-white/[0.03]'
