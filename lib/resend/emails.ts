@@ -1,8 +1,11 @@
 import { resend, EMAIL_FROM } from '@/lib/resend/client'
+import { PAST_DUE_GRACE_DAYS } from '@/lib/stripe/plans'
 
 // Server-only. Every function here swallows its own send error (logs, does
 // not throw) -- a failed notification email should never break the
 // customer/invoice flow that triggered it.
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
 function wrapper(bodyHtml: string) {
   return `
@@ -67,6 +70,27 @@ export async function sendWelcomeEmail(params: {
     })
   } catch (err) {
     console.error('sendWelcomeEmail failed:', err)
+  }
+}
+
+export async function sendPaymentFailedEmail(params: { to: string; companyName: string }) {
+  const { to, companyName } = params
+  try {
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject: `Action needed: payment failed for ${companyName}`,
+      html: wrapper(`
+        <p>Hi,</p>
+        <p>We weren't able to charge the card on file for <strong>${companyName}</strong>'s Frostburn subscription.</p>
+        <p>You have <strong>${PAST_DUE_GRACE_DAYS} days</strong> to update your payment method before dashboard access is restricted.</p>
+        <p style="margin: 24px 0;">
+          <a href="${siteUrl}/dashboard/settings/billing" style="display:inline-block; background:#38bdf8; color:#05091a; font-weight:600; padding:10px 20px; border-radius:8px; text-decoration:none;">Update payment method</a>
+        </p>
+      `),
+    })
+  } catch (err) {
+    console.error('sendPaymentFailedEmail failed:', err)
   }
 }
 
