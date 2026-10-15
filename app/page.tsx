@@ -143,7 +143,7 @@ const FEATURES = [
             <div className="text-[10px] text-green-400 font-semibold">↑ 23% vs last month</div>
           </div>
         </div>
-        <div className="flex items-end gap-2 h-16">
+        <div className="flex items-end gap-2 h-24">
           {[
             { h: 38, m: 'Feb' },
             { h: 44, m: 'Mar' },
