@@ -118,8 +118,8 @@ export default function SecurityPage() {
             <h2>Who to contact</h2>
             <p>
               Security concerns, data requests, or anything else:{' '}
-              <a href="mailto:info@frostburn.io" className="text-ice hover:underline">
-                info@frostburn.io
+              <a href="mailto:j_tristan@me.com" className="text-ice hover:underline">
+                j_tristan@me.com
               </a>
               . Frostburn is currently a small, hands-on operation — you&apos;ll be talking directly to the
               person who built it.

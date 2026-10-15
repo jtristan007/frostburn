@@ -145,8 +145,8 @@ export default function TermsPage() {
             <h2>13. Contact</h2>
             <p>
               Questions about these Terms? Email{' '}
-              <a href="mailto:info@frostburn.io" className="text-ice hover:underline">
-                info@frostburn.io
+              <a href="mailto:j_tristan@me.com" className="text-ice hover:underline">
+                j_tristan@me.com
               </a>
               .
             </p>

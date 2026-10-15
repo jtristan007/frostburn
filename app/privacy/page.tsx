@@ -138,8 +138,8 @@ export default function PrivacyPage() {
             <h2>10. Contact</h2>
             <p>
               Questions about this policy or your data? Email{' '}
-              <a href="mailto:info@frostburn.io" className="text-ice hover:underline">
-                info@frostburn.io
+              <a href="mailto:j_tristan@me.com" className="text-ice hover:underline">
+                j_tristan@me.com
               </a>
               .
             </p>
