@@ -2,7 +2,59 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { stripe } from '@/lib/stripe/client'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { tierForPriceId } from '@/lib/stripe/plans'
+import { tierForPriceId, type Tier } from '@/lib/stripe/plans'
+import { sendPaymentFailedEmail } from '@/lib/resend/emails'
+
+const DUNNING_STATUSES = new Set(['past_due', 'unpaid'])
+
+// Single place that writes subscription_status so past_due_since and the
+// payment-failed email stay in sync with it. Looks the account up by
+// Stripe customer ID rather than taking an account row, since every caller
+// already has the customer ID from the event and nothing else -- fine
+// everywhere except checkout.session.completed, which sets
+// stripe_customer_id for the first time and so can't go through this path.
+async function updateAccountSubscriptionStatus(
+  admin: ReturnType<typeof createAdminClient>,
+  params: { stripeCustomerId: string; status: string; tier?: Tier | null }
+) {
+  const { stripeCustomerId, status, tier } = params
+  const { data: account } = await admin
+    .from('accounts')
+    .select('id, name, subscription_status, past_due_since')
+    .eq('stripe_customer_id', stripeCustomerId)
+    .maybeSingle()
+  if (!account) return
+
+  const wasDunning = DUNNING_STATUSES.has(account.subscription_status ?? '')
+  const isDunning = DUNNING_STATUSES.has(status)
+
+  await admin
+    .from('accounts')
+    .update({
+      subscription_status: status,
+      // Keeps the original timestamp across repeat past_due/unpaid
+      // deliveries (Stripe retries both the charge and the webhook) --
+      // only ever set once per dunning episode, cleared on recovery.
+      past_due_since: isDunning ? (account.past_due_since ?? new Date().toISOString()) : null,
+      ...(tier !== undefined ? { tier } : {}),
+    })
+    .eq('id', account.id)
+
+  if (isDunning && !wasDunning) {
+    const { data: owner } = await admin
+      .from('account_users')
+      .select('user_id')
+      .eq('account_id', account.id)
+      .eq('role', 'owner')
+      .maybeSingle()
+    const ownerEmail = owner?.user_id
+      ? (await admin.auth.admin.getUserById(owner.user_id)).data.user?.email
+      : undefined
+    if (ownerEmail) {
+      await sendPaymentFailedEmail({ to: ownerEmail, companyName: account.name })
+    }
+  }
+}
 
 // Must be a Route Handler, not a Server Action: this receives an
 // unauthenticated external POST from Stripe with no Next.js session, and
@@ -99,20 +151,21 @@ export async function POST(request: Request) {
       const priceId = subscription.items.data[0]?.price.id
       const tier = priceId ? tierForPriceId(priceId) : null
 
-      await admin
-        .from('accounts')
-        .update({ tier, subscription_status: subscription.status })
-        .eq('stripe_customer_id', subscription.customer as string)
+      await updateAccountSubscriptionStatus(admin, {
+        stripeCustomerId: subscription.customer as string,
+        status: subscription.status,
+        tier,
+      })
       break
     }
 
     case 'customer.subscription.deleted': {
       const subscription = event.data.object as Stripe.Subscription
 
-      await admin
-        .from('accounts')
-        .update({ subscription_status: 'canceled' })
-        .eq('stripe_customer_id', subscription.customer as string)
+      await updateAccountSubscriptionStatus(admin, {
+        stripeCustomerId: subscription.customer as string,
+        status: 'canceled',
+      })
       break
     }
 
@@ -121,10 +174,7 @@ export async function POST(request: Request) {
       const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id
       if (!customerId) break
 
-      await admin
-        .from('accounts')
-        .update({ subscription_status: 'past_due' })
-        .eq('stripe_customer_id', customerId)
+      await updateAccountSubscriptionStatus(admin, { stripeCustomerId: customerId, status: 'past_due' })
       break
     }
   }

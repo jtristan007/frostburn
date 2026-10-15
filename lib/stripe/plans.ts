@@ -4,6 +4,12 @@ export type Tier = 'starter' | 'growth' | 'pro'
 
 export const TRIAL_PERIOD_DAYS = 30
 
+// How long an account keeps access after a renewal charge first fails
+// (subscription_status past_due/unpaid) before the dashboard locks out.
+// Independent of Stripe's own retry schedule -- see past_due_since on
+// accounts and the webhook's updateAccountSubscriptionStatus.
+export const PAST_DUE_GRACE_DAYS = 3
+
 export const TIER_LABELS: Record<Tier, string> = {
   starter: 'Starter',
   growth: 'Growth',
