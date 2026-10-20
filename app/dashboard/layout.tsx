@@ -1,5 +1,10 @@
 import { getCurrentAccount } from '@/lib/account'
 import { DashboardNav } from '@/components/dashboard/nav'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { account } = await getCurrentAccount()

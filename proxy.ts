@@ -15,6 +15,11 @@ const publicPaths = [
   '/security',
   '/api/stripe/webhook',
   '/api/cron',
+  // Search engine + social preview files -- must never redirect to /login.
+  '/robots.txt',
+  '/sitemap.xml',
+  '/opengraph-image',
+  '/twitter-image',
 ]
 
 export async function proxy(request: NextRequest) {
