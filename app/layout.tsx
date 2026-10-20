@@ -10,10 +10,28 @@ const plexMono = IBM_Plex_Mono({
   variable: '--font-mono-raw',
 })
 
+const SITE_TITLE = 'Frostburn — Run your HVAC company without hiring an office admin'
+const SITE_DESCRIPTION =
+  'Schedule jobs, manage maintenance agreements, and collect overdue invoices from one simple system built for 1–5 technician HVAC shops.'
+
 export const metadata: Metadata = {
-  title: 'Frostburn — Run your HVAC company without hiring an office admin',
-  description:
-    'Schedule jobs, manage maintenance agreements, and collect overdue invoices from one simple system built for 1–5 technician HVAC shops.',
+  metadataBase: new URL('https://frostburn.io'),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  applicationName: 'Frostburn',
+  openGraph: {
+    type: 'website',
+    siteName: 'Frostburn',
+    url: 'https://frostburn.io',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
 }
 
 export default function RootLayout({

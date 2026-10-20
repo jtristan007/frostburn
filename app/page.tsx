@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { Logo } from '@/components/logo'
 import { FrostHero } from '@/components/landing/frost-hero'
 import { PricingTiers } from '@/components/landing/pricing-tiers'
-import { TRIAL_PERIOD_DAYS } from '@/lib/stripe/plans'
+import type { Metadata } from 'next'
+import { TRIAL_PERIOD_DAYS, TIER_PRICES, TIER_LABELS, type Tier } from '@/lib/stripe/plans'
 
 const TIERS = [
   {
@@ -166,9 +167,50 @@ const FEATURES = [
   },
 ]
 
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+}
+
+// Tells Google Frostburn is a software product with these plans, so search
+// results can show pricing. Prices come from the same source as checkout.
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Frostburn',
+  url: 'https://frostburn.io',
+  description:
+    'Scheduling, maintenance agreements, client history and automatic overdue-invoice reminders for small HVAC companies.',
+  applicationCategory: 'BusinessApplication',
+  applicationSubCategory: 'HVAC field service management',
+  operatingSystem: 'Web, iOS, Android, Windows, macOS',
+  offers: (Object.keys(TIER_PRICES) as Tier[]).map((tier) => ({
+    '@type': 'Offer',
+    name: `${TIER_LABELS[tier]} plan`,
+    price: TIER_PRICES[tier],
+    priceCurrency: 'USD',
+    priceSpecification: {
+      '@type': 'UnitPriceSpecification',
+      price: TIER_PRICES[tier],
+      priceCurrency: 'USD',
+      unitCode: 'MON',
+    },
+  })),
+  publisher: {
+    '@type': 'Organization',
+    name: 'Frostburn',
+    url: 'https://frostburn.io',
+    email: 'info@frostburn.io',
+    logo: 'https://frostburn.io/logo.svg',
+  },
+}
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen relative" style={{ background: '#05070f' }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+      />
       <div
         className="fixed inset-0 -z-50 pointer-events-none"
         style={{
