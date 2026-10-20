@@ -440,7 +440,7 @@ export default function LandingPage() {
               info@frostburn.io
             </a>
           </p>
-          <div className="flex gap-4 text-xs text-mist">
+          <div className="flex flex-wrap justify-center gap-4 text-xs text-mist">
             <Link href="/terms" className="hover:text-white">
               Terms
             </Link>
@@ -452,6 +452,9 @@ export default function LandingPage() {
             </Link>
             <Link href="/jobber-alternative" className="hover:text-white">
               Jobber alternative
+            </Link>
+            <Link href="/housecall-pro-alternative" className="hover:text-white">
+              Housecall Pro alternative
             </Link>
           </div>
         </div>
