@@ -230,6 +230,29 @@ export default function LandingPage() {
         </p>
       </div>
 
+      <section id="demo" className="pt-24 pb-4">
+        <div className="max-w-5xl mx-auto px-6 text-center">
+          <p className="font-mono text-[11px] font-medium text-ice uppercase tracking-[0.14em] mb-3">See it in 40 seconds</p>
+          <h2 className="text-3xl font-display font-bold text-white max-w-2xl mx-auto">
+            From first call to paid invoice — without the desk work.
+          </h2>
+          <div className="mt-10 rounded-2xl overflow-hidden border border-ice/20 shadow-[0_40px_120px_-30px_rgba(56,189,248,0.45)] bg-navy">
+            <video
+              className="w-full h-auto block"
+              controls
+              playsInline
+              preload="none"
+              poster="/frostburn-demo-poster.jpg"
+              width={1920}
+              height={1080}
+            >
+              <source src="/frostburn-demo.mp4" type="video/mp4" />
+              <track kind="captions" src="/frostburn-demo.vtt" srcLang="en" label="English" />
+            </video>
+          </div>
+        </div>
+      </section>
+
       <section className="py-24">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <p className="font-mono text-[11px] font-medium text-ice uppercase tracking-[0.14em] mb-3">Sound familiar?</p>
