@@ -4,8 +4,8 @@ import { TIER_LABELS, TIER_PRICES, TRIAL_PERIOD_DAYS, type Tier } from '@/lib/st
 const TIER_ORDER: Tier[] = ['starter', 'growth', 'pro']
 
 const TECH_RANGES: Record<Tier, string> = {
-  starter: '1–3 techs',
-  growth: '4–15 techs',
+  starter: '1–5 techs',
+  growth: '6–15 techs',
   pro: '15+ techs',
 }
 

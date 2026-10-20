@@ -16,10 +16,10 @@ export const TIER_PRICES: Record<Tier, number> = {
   pro: 499,
 }
 
-// The tier names on the pricing page ("1-3 techs", "4-15 techs", "15+
+// The tier names on the pricing page ("1-5 techs", "6-15 techs", "15+
 // techs") -- enforced here when inviting a teammate, not just labeling.
 export const TIER_TECH_LIMITS: Record<Tier, number> = {
-  starter: 3,
+  starter: 5,
   growth: 15,
   pro: Infinity,
 }
