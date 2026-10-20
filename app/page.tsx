@@ -9,7 +9,7 @@ const TIERS = [
   {
     name: 'Starter',
     price: 149,
-    techs: '1–3 techs',
+    techs: '1–5 techs',
     features: [
       'Pricing book & quotes',
       'Equipment history',
@@ -20,7 +20,7 @@ const TIERS = [
   {
     name: 'Growth',
     price: 299,
-    techs: '4–15 techs',
+    techs: '6–15 techs',
     popular: true,
     features: [
       'Everything in Starter',
@@ -449,6 +449,9 @@ export default function LandingPage() {
             </Link>
             <Link href="/security" className="hover:text-white">
               Security
+            </Link>
+            <Link href="/jobber-alternative" className="hover:text-white">
+              Jobber alternative
             </Link>
           </div>
         </div>
