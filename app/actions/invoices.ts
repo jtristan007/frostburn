@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { stripe } from '@/lib/stripe/client'
+import { getCurrentAccount } from '@/lib/account'
+import { sendInvoiceEmail } from '@/lib/resend/emails'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
@@ -127,4 +129,43 @@ export async function payInvoice(token: string) {
   await admin.from('invoices').update({ stripe_checkout_session_id: session.id }).eq('id', invoice.id)
 
   redirect(session.url)
+}
+
+// Emails the invoice to its customer. Reads through the caller's RLS-scoped
+// client, so an owner can only send their own account's invoices. Includes
+// the pay link only when the account can take card payments; a draft
+// becomes "sent" once the email goes out.
+export async function sendInvoiceToCustomer(id: string): Promise<{ error?: string; sentTo?: string }> {
+  const { supabase, user, account } = await getCurrentAccount()
+
+  const { data: invoice } = await supabase
+    .from('invoices')
+    .select('id, invoice_number, status, total, due_date, pay_token, customers(name, email)')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (!invoice) return { error: 'Invoice not found.' }
+  if (invoice.status === 'paid') return { error: 'This invoice is already paid.' }
+
+  const customer = invoice.customers as unknown as { name: string; email: string | null } | null
+  if (!customer?.email) return { error: 'Add an email address to this customer first.' }
+
+  const ok = await sendInvoiceEmail({
+    to: customer.email,
+    replyTo: user.email ?? undefined,
+    customerName: customer.name,
+    companyName: account.name,
+    invoiceNumber: invoice.invoice_number,
+    total: Number(invoice.total),
+    dueDate: invoice.due_date,
+    payUrl: account.stripe_connect_charges_enabled ? `${siteUrl}/pay/${invoice.pay_token}` : null,
+  })
+  if (!ok) return { error: 'The email could not be sent. Please try again in a minute.' }
+
+  if (invoice.status === 'draft') {
+    await supabase.from('invoices').update({ status: 'sent' }).eq('id', id)
+  }
+  revalidatePath(`/dashboard/invoices/${id}`)
+  revalidatePath('/dashboard/invoices')
+  return { sentTo: customer.email }
 }

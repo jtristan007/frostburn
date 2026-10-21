@@ -109,3 +109,57 @@ export async function sendMorningBriefingEmail(params: {
     console.error('sendMorningBriefingEmail failed:', err)
   }
 }
+
+// Values interpolated into HTML come from user-entered data (company and
+// customer names), so escape them.
+function esc(s: string) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
+// Unlike the notification helpers above, this one reports failure: the
+// owner clicked "Send" and needs to know whether the customer got it.
+export async function sendInvoiceEmail(params: {
+  to: string
+  replyTo?: string
+  customerName: string
+  companyName: string
+  invoiceNumber: string
+  total: number
+  dueDate: string | null
+  payUrl: string | null
+}): Promise<boolean> {
+  const { to, replyTo, customerName, companyName, invoiceNumber, total, dueDate, payUrl } = params
+  const company = esc(companyName)
+  try {
+    const { error } = await resend.emails.send({
+      from: `"${companyName.replace(/[<>"\\\r\n]/g, '')} via Frostburn" <notifications@frostburn.io>`,
+      to,
+      replyTo,
+      subject: `Invoice ${invoiceNumber} from ${companyName}: $${total.toFixed(2)}`.replace(/[\r\n]+/g, ' '),
+      html: wrapper(`
+        <p>Hi ${esc(customerName)},</p>
+        <p>Here is invoice <strong>${esc(invoiceNumber)}</strong> from <strong>${company}</strong>.</p>
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin:16px 0;">
+          <div style="font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.04em;">Amount due</div>
+          <div style="font-size:24px; font-weight:700;">$${total.toFixed(2)}</div>
+          ${dueDate ? `<div style="font-size:13px; color:#64748b; margin-top:4px;">Due ${esc(dueDate)}</div>` : ''}
+        </div>
+        ${
+          payUrl
+            ? `<p style="margin:24px 0;"><a href="${payUrl}" style="display:inline-block; background:#38bdf8; color:#05091a; font-weight:600; text-decoration:none; padding:12px 20px; border-radius:8px;">Pay invoice online</a></p>
+               <p style="font-size:13px; color:#64748b;">Or open this link: <a href="${payUrl}" style="color:#0284c7;">${payUrl}</a></p>`
+            : `<p>Please contact ${company} to arrange payment.</p>`
+        }
+        <p>Questions about this invoice? Just reply to this email to reach ${company}.</p>
+      `),
+    })
+    if (error) {
+      console.error('sendInvoiceEmail failed:', error)
+      return false
+    }
+    return true
+  } catch (err) {
+    console.error('sendInvoiceEmail failed:', err)
+    return false
+  }
+}

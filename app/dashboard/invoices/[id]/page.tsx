@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { getCurrentAccount } from '@/lib/account'
 import { PrintButton } from '@/components/dashboard/print-button'
 import { SendToQuickBooksButton } from '@/components/dashboard/send-to-quickbooks-button'
+import { SendInvoiceButton } from '@/components/dashboard/send-invoice-button'
 import { getConnectionStatus } from '@/lib/quickbooks/client'
 
 const STATUS_LABELS: Record<string, string> = {
@@ -50,7 +51,14 @@ export default async function InvoiceViewPage({ params }: { params: Promise<{ id
         <Link href="/dashboard/invoices" className="text-sm text-gray-400 hover:text-navy">
           ← Back to invoices
         </Link>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-start">
+          {invoice.status !== 'paid' && (
+            <SendInvoiceButton
+              invoiceId={invoice.id}
+              customerEmail={customer?.email ?? null}
+              alreadySent={invoice.status === 'sent' || invoice.status === 'overdue'}
+            />
+          )}
           <Link
             href={`/dashboard/invoices/${invoice.id}/edit`}
             className="text-sm font-semibold border border-gray-200 text-navy px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
@@ -122,6 +130,16 @@ export default async function InvoiceViewPage({ params }: { params: Promise<{ id
           </div>
         )}
       </div>
+
+      {!account.stripe_connect_charges_enabled && invoice.status !== 'paid' && (
+        <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 max-w-2xl mt-6 text-sm text-amber-800 print:hidden">
+          Customers can&apos;t pay this invoice online yet. Connect Stripe in{' '}
+          <Link href="/dashboard/settings/payments" className="font-semibold underline">
+            Settings → Payments
+          </Link>{' '}
+          to add a Pay button to invoice emails.
+        </div>
+      )}
 
       {account.stripe_connect_charges_enabled && invoice.status !== 'paid' && (
         <div className="bg-white rounded-2xl border border-gray-100 p-6 max-w-2xl mt-6 print:hidden">
