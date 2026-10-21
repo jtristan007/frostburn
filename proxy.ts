@@ -15,6 +15,7 @@ const publicPaths = [
   '/security',
   '/jobber-alternative',
   '/housecall-pro-alternative',
+  '/servicetitan-alternative',
   '/api/stripe/webhook',
   '/api/cron',
   // Search engine + social preview files -- must never redirect to /login.
