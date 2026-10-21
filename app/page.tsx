@@ -479,6 +479,9 @@ export default function LandingPage() {
             <Link href="/housecall-pro-alternative" className="hover:text-white">
               Housecall Pro alternative
             </Link>
+            <Link href="/servicetitan-alternative" className="hover:text-white">
+              ServiceTitan alternative
+            </Link>
           </div>
         </div>
       </footer>

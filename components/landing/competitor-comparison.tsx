@@ -7,6 +7,9 @@ import { TRIAL_PERIOD_DAYS } from '@/lib/stripe/plans'
 // its data; every competitor price must be sourced and dated in `priceNote`.
 
 export type PriceRow = { techs: string; competitor: number; frostburn: number }
+// For competitors that don't publish prices: compare terms side by side
+// instead of inventing numbers.
+export type PriceFact = { label: string; competitor: string; frostburn: string }
 export type Faq = { q: string; a: string }
 export type Feature = { t: string; d: string }
 
@@ -14,7 +17,9 @@ export type ComparisonProps = {
   competitor: string
   heroIntro: string
   priceIntro: string
-  rows: PriceRow[]
+  // Exactly one of `rows` (published per-team-size prices) or `priceFacts`.
+  rows?: PriceRow[]
+  priceFacts?: PriceFact[]
   priceNote: ReactNode
   features: Feature[]
   betterPick: string[]
@@ -97,6 +102,26 @@ export function CompetitorComparison(p: ComparisonProps) {
             <p className="mt-4 text-mist">{p.priceIntro}</p>
 
             <div className="mt-10 overflow-x-auto rounded-xl border border-white/10">
+              {p.priceFacts ? (
+              <table className="w-full text-left text-xs sm:text-sm">
+                <thead className="bg-white/[0.04] text-mist">
+                  <tr>
+                    <th scope="col" className={`${cell} font-medium`}><span className="sr-only">Compared</span></th>
+                    <th scope="col" className={`${cell} font-medium`}>{p.competitor}</th>
+                    <th scope="col" className={`${cell} font-medium text-ice`}>Frostburn</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/10 text-gray-200">
+                  {p.priceFacts.map((f) => (
+                    <tr key={f.label}>
+                      <th scope="row" className={`${cell} font-medium text-white`}>{f.label}</th>
+                      <td className={cell}>{f.competitor}</td>
+                      <td className={`${cell} text-white font-semibold`}>{f.frostburn}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              ) : (
               <table className="w-full text-left text-xs sm:text-sm">
                 <thead className="bg-white/[0.04] text-mist">
                   <tr>
@@ -107,7 +132,7 @@ export function CompetitorComparison(p: ComparisonProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/10 text-gray-200">
-                  {p.rows.map((r) => {
+                  {(p.rows ?? []).map((r) => {
                     const diff = r.competitor - r.frostburn
                     return (
                       <tr key={r.techs}>
@@ -128,6 +153,7 @@ export function CompetitorComparison(p: ComparisonProps) {
                   })}
                 </tbody>
               </table>
+              )}
             </div>
             <p className="mt-4 text-xs text-mist leading-relaxed">
               {p.priceNote} Prices exclude tax. {p.competitor} is a trademark of its owner; Frostburn is not affiliated
@@ -240,6 +266,7 @@ export function CompetitorComparison(p: ComparisonProps) {
           <div className="flex flex-wrap justify-center gap-4 text-xs">
             <Link href="/jobber-alternative" className="hover:text-white">Jobber alternative</Link>
             <Link href="/housecall-pro-alternative" className="hover:text-white">Housecall Pro alternative</Link>
+            <Link href="/servicetitan-alternative" className="hover:text-white">ServiceTitan alternative</Link>
             <Link href="/terms" className="hover:text-white">Terms</Link>
             <Link href="/privacy" className="hover:text-white">Privacy</Link>
             <Link href="/security" className="hover:text-white">Security</Link>
