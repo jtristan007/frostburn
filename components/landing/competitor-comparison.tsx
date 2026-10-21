@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
-import { Logo } from '@/components/logo'
+import { MarketingHeader, MarketingFooter } from '@/components/landing/marketing-chrome'
 import { TRIAL_PERIOD_DAYS } from '@/lib/stripe/plans'
 
 // Shared layout for /<competitor>-alternative pages. Each page supplies only
@@ -50,24 +50,7 @@ export function CompetitorComparison(p: ComparisonProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
 
-      <header className="border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" aria-label="Frostburn home">
-            <Logo className="h-12" />
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="text-sm font-medium text-gray-300 hover:text-white">
-              Sign in
-            </Link>
-            <Link
-              href="/signup"
-              className="text-sm font-semibold bg-ice text-navy px-4 py-2 rounded-lg hover:bg-ice-dim transition-colors"
-            >
-              Get Started
-            </Link>
-          </div>
-        </div>
-      </header>
+      <MarketingHeader />
 
       <main>
         <section className="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
@@ -252,28 +235,7 @@ export function CompetitorComparison(p: ComparisonProps) {
         </section>
       </main>
 
-      <footer className="border-t border-white/10 py-8" style={{ background: '#05091a' }}>
-        <div className="max-w-6xl mx-auto px-6 flex flex-col items-center gap-3 text-sm text-mist">
-          <Link href="/" aria-label="Frostburn home">
-            <Logo className="h-9" />
-          </Link>
-          <p>
-            Contact:{' '}
-            <a href="mailto:info@frostburn.io" className="text-ice hover:underline">
-              info@frostburn.io
-            </a>
-          </p>
-          <div className="flex flex-wrap justify-center gap-4 text-xs">
-            <Link href="/jobber-alternative" className="hover:text-white">Jobber alternative</Link>
-            <Link href="/housecall-pro-alternative" className="hover:text-white">Housecall Pro alternative</Link>
-            <Link href="/servicetitan-alternative" className="hover:text-white">ServiceTitan alternative</Link>
-            <Link href="/fieldedge-alternative" className="hover:text-white">FieldEdge alternative</Link>
-            <Link href="/terms" className="hover:text-white">Terms</Link>
-            <Link href="/privacy" className="hover:text-white">Privacy</Link>
-            <Link href="/security" className="hover:text-white">Security</Link>
-          </div>
-        </div>
-      </footer>
+      <MarketingFooter />
     </div>
   )
 }

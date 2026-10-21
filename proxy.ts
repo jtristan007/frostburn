@@ -17,6 +17,8 @@ const publicPaths = [
   '/housecall-pro-alternative',
   '/servicetitan-alternative',
   '/fieldedge-alternative',
+  '/hvac-software-small-business',
+  '/hvac-invoicing-software',
   '/api/stripe/webhook',
   '/api/cron',
   // Search engine + social preview files -- must never redirect to /login.

@@ -2,45 +2,10 @@ import Link from 'next/link'
 import { Logo } from '@/components/logo'
 import { FrostHero } from '@/components/landing/frost-hero'
 import { PricingTiers } from '@/components/landing/pricing-tiers'
+import { TIERS } from '@/components/landing/tiers'
+import { MARKETING_LINKS } from '@/components/landing/marketing-chrome'
 import type { Metadata } from 'next'
 import { TRIAL_PERIOD_DAYS, TIER_PRICES, TIER_LABELS, type Tier } from '@/lib/stripe/plans'
-
-const TIERS = [
-  {
-    name: 'Starter',
-    price: 149,
-    techs: '1–5 techs',
-    features: [
-      'Pricing book & quotes',
-      'Equipment history',
-      'Scheduling',
-      'Email support',
-    ],
-  },
-  {
-    name: 'Growth',
-    price: 299,
-    techs: '6–15 techs',
-    popular: true,
-    features: [
-      'Everything in Starter',
-      'Maintenance agreement tracking',
-      'Filter & warranty alerts',
-      'Priority support',
-    ],
-  },
-  {
-    name: 'Pro',
-    price: 499,
-    techs: '15+ techs',
-    features: [
-      'Everything in Growth',
-      'Multi-location dashboard',
-      'Advanced analytics',
-      'Dedicated account manager',
-    ],
-  },
-]
 
 const FEATURES = [
   {
@@ -473,18 +438,11 @@ export default function LandingPage() {
             <Link href="/security" className="hover:text-white">
               Security
             </Link>
-            <Link href="/jobber-alternative" className="hover:text-white">
-              Jobber alternative
-            </Link>
-            <Link href="/housecall-pro-alternative" className="hover:text-white">
-              Housecall Pro alternative
-            </Link>
-            <Link href="/servicetitan-alternative" className="hover:text-white">
-              ServiceTitan alternative
-            </Link>
-            <Link href="/fieldedge-alternative" className="hover:text-white">
-              FieldEdge alternative
-            </Link>
+            {MARKETING_LINKS.map((l) => (
+              <Link key={l.href} href={l.href} className="hover:text-white">
+                {l.label}
+              </Link>
+            ))}
           </div>
         </div>
       </footer>
