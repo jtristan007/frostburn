@@ -14,7 +14,7 @@ export default async function PayInvoicePage({
   const result = await getInvoiceByToken(token)
   if (!result) notFound()
 
-  const { invoice, companyName, customerName } = result
+  const { invoice, companyName, customerName, chargesEnabled } = result
   const isPaid = paid === '1' || invoice.status === 'paid'
 
   return (
@@ -49,6 +49,12 @@ export default async function PayInvoicePage({
                   {error}
                 </div>
               )}
+              {!chargesEnabled ? (
+                <div className="mt-6 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm text-gray-600">
+                  Online payment isn&apos;t available for this invoice. Please contact{' '}
+                  {companyName ?? 'the business that sent it'} to arrange payment.
+                </div>
+              ) : (
               <form action={payInvoice.bind(null, token)} className="mt-6">
                 <button
                   type="submit"
@@ -57,6 +63,7 @@ export default async function PayInvoicePage({
                   Pay now
                 </button>
               </form>
+              )}
             </>
           )}
         </div>
