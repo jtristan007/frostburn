@@ -19,6 +19,7 @@ const publicPaths = [
   '/fieldedge-alternative',
   '/hvac-software-small-business',
   '/hvac-invoicing-software',
+  '/pricing',
   '/api/stripe/webhook',
   '/api/cron',
   // Search engine + social preview files -- must never redirect to /login.
