@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState } from 'react'
+import { Suspense, useActionState } from 'react'
 import { login } from '@/app/actions/auth'
+import { LinkError } from '@/components/auth/link-error'
 import { AuthShell, authInputClass, authLabelClass } from '@/components/auth/auth-shell'
 
 export default function LoginPage() {
@@ -21,6 +22,9 @@ export default function LoginPage() {
         </>
       }
     >
+      <Suspense fallback={null}>
+        <LinkError />
+      </Suspense>
       <form action={action} className="space-y-5">
         <div>
           <label htmlFor="email" className={authLabelClass}>
