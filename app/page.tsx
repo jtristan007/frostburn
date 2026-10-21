@@ -482,6 +482,9 @@ export default function LandingPage() {
             <Link href="/servicetitan-alternative" className="hover:text-white">
               ServiceTitan alternative
             </Link>
+            <Link href="/fieldedge-alternative" className="hover:text-white">
+              FieldEdge alternative
+            </Link>
           </div>
         </div>
       </footer>

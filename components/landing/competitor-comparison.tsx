@@ -267,6 +267,7 @@ export function CompetitorComparison(p: ComparisonProps) {
             <Link href="/jobber-alternative" className="hover:text-white">Jobber alternative</Link>
             <Link href="/housecall-pro-alternative" className="hover:text-white">Housecall Pro alternative</Link>
             <Link href="/servicetitan-alternative" className="hover:text-white">ServiceTitan alternative</Link>
+            <Link href="/fieldedge-alternative" className="hover:text-white">FieldEdge alternative</Link>
             <Link href="/terms" className="hover:text-white">Terms</Link>
             <Link href="/privacy" className="hover:text-white">Privacy</Link>
             <Link href="/security" className="hover:text-white">Security</Link>
