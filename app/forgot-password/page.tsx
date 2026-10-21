@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState } from 'react'
+import { Suspense, useActionState } from 'react'
 import { forgotPassword } from '@/app/actions/auth'
+import { LinkError } from '@/components/auth/link-error'
 import { AuthShell, authInputClass, authLabelClass } from '@/components/auth/auth-shell'
 
 export default function ForgotPasswordPage() {
@@ -30,6 +31,10 @@ export default function ForgotPasswordPage() {
           <p className="text-sm text-mist">{state.message}</p>
         </div>
       ) : (
+        <>
+        <Suspense fallback={null}>
+          <LinkError />
+        </Suspense>
         <form action={action} className="space-y-5">
           <div>
             <label htmlFor="email" className={authLabelClass}>
@@ -60,6 +65,7 @@ export default function ForgotPasswordPage() {
             {pending ? 'Sending…' : 'Send reset link'}
           </button>
         </form>
+        </>
       )}
     </AuthShell>
   )
