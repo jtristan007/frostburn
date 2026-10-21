@@ -2,7 +2,12 @@
 
 import { redirect } from 'next/navigation'
 import { getCurrentAccount } from '@/lib/account'
-import { ensureConnectedAccount, createOnboardingLink } from '@/lib/stripe-connect/client'
+import {
+  ensureConnectedAccount,
+  createOnboardingLink,
+  isUnreachableConnectedAccount,
+  resetConnectedAccount,
+} from '@/lib/stripe-connect/client'
 
 // Kicks off (or resumes) Stripe Connect onboarding for the current HVAC
 // company. Mirrors connectQuickBooks's redirect-out shape, but there's no
@@ -14,8 +19,17 @@ export async function connectStripePayments() {
 
   let url: string
   try {
-    const connectedAccountId = await ensureConnectedAccount(account.id, account.name, user.email)
-    url = await createOnboardingLink(connectedAccountId)
+    let connectedAccountId = await ensureConnectedAccount(account.id, account.name, user.email)
+    try {
+      url = await createOnboardingLink(connectedAccountId)
+    } catch (err) {
+      // Stored account belongs to an old Stripe key: start over once with
+      // a fresh connected account under the current key.
+      if (!isUnreachableConnectedAccount(err)) throw err
+      await resetConnectedAccount(account.id)
+      connectedAccountId = await ensureConnectedAccount(account.id, account.name, user.email)
+      url = await createOnboardingLink(connectedAccountId)
+    }
   } catch (err) {
     // Same failure mode as the sync in the Payments page: a connected
     // account created against one Stripe key can't be reached with a
