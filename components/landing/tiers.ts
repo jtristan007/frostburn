@@ -32,9 +32,9 @@ export const TIERS = [
     techs: '15+ techs',
     features: [
       'Everything in Growth',
-      'Multi-location dashboard',
-      'Advanced analytics',
-      'Dedicated account manager',
+      'Unlimited techs',
+      'Personal onboarding & data import done for you',
+      'Direct line to the founder',
     ],
   },
 ]

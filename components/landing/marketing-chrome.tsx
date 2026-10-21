@@ -27,6 +27,7 @@ export function MarketingHeader() {
 }
 
 export const MARKETING_LINKS = [
+  { href: '/pricing', label: 'Pricing' },
   { href: '/hvac-software-small-business', label: 'HVAC software for small business' },
   { href: '/hvac-invoicing-software', label: 'HVAC invoicing software' },
   { href: '/jobber-alternative', label: 'Jobber alternative' },
