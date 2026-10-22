@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendInvoiceReminderEmail, sendMorningBriefingEmail } from '@/lib/resend/emails'
+import { reconcileOpenCheckouts } from '@/lib/stripe-connect/reconcile'
 
 // Runs once daily (see vercel.json). For every account: emails a reminder
 // for each overdue invoice with a customer email on file, then emails the
@@ -15,6 +16,11 @@ export async function GET(request: NextRequest) {
 
   const admin = createAdminClient()
   const todayStr = new Date().toISOString().slice(0, 10)
+
+  // Mark invoices paid that customers paid through Stripe but the app never
+  // heard about (no webhook delivered). Must run before the overdue
+  // reminders below so nobody is chased for an invoice they already paid.
+  const reconciled = await reconcileOpenCheckouts()
 
   // Agreement renewal rollover: an agreement whose renewal_date has passed
   // renews for another year and its included-visits counter resets --
@@ -126,5 +132,5 @@ export async function GET(request: NextRequest) {
     results.push({ account: account.name, reminders: reminderCount, briefingSent })
   }
 
-  return NextResponse.json({ ok: true, agreementsRenewed: dueForRenewal?.length ?? 0, results })
+  return NextResponse.json({ ok: true, invoicesReconciled: reconciled, agreementsRenewed: dueForRenewal?.length ?? 0, results })
 }
