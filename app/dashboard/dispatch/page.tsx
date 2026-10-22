@@ -1,6 +1,10 @@
 import Link from 'next/link'
+import { after } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentAccount } from '@/lib/account'
 import { updateFieldStatus, type FieldStatus } from '@/app/actions/jobs'
+import { partitionByCoordinates, geocodePending, addressLine } from '@/lib/geocode'
+import { DispatchMap, type MapJob, type MapStatus } from '@/components/dashboard/dispatch-map'
 
 const FIELD_STATUS_LABELS: Record<FieldStatus, string> = {
   dispatched: 'Dispatched',
@@ -40,7 +44,7 @@ export default async function DispatchPage() {
     supabase
       .from('jobs')
       .select(
-        'id, job_type, scheduled_date, status, field_status, assigned_technician_id, customers(name, address, city)'
+        'id, job_type, scheduled_date, status, field_status, assigned_technician_id, customers(id, name, address, city, latitude, longitude, geocoded_address)'
       )
       .gte('scheduled_date', `${todayStr}T00:00:00`)
       .lt('scheduled_date', `${todayStr}T23:59:59`)
@@ -55,6 +59,55 @@ export default async function DispatchPage() {
     const key = job.assigned_technician_id ?? 'unassigned'
     if (!byTech.has(key)) byTech.set(key, [])
     byTech.get(key)!.push(job)
+  }
+
+  type JobCustomer = {
+    id: string
+    name: string
+    address: string | null
+    city: string | null
+    latitude: number | null
+    longitude: number | null
+    geocoded_address: string | null
+  }
+  const customerOf = (job: { customers: unknown }) => job.customers as JobCustomer | null
+
+  // Pins come from saved coordinates only, so the page never waits on a
+  // lookup; new or edited addresses are geocoded after the response and
+  // show up on the next load.
+  const { coords, pending } = partitionByCoordinates(
+    (jobs ?? []).map(customerOf).filter((c): c is JobCustomer => c !== null)
+  )
+  if (pending.length) after(() => geocodePending(createAdminClient(), pending))
+
+  const stopCount = new Map<string, number>()
+  const mapJobs: MapJob[] = []
+  let unplaced = 0
+  for (const job of jobs ?? []) {
+    const techId = job.assigned_technician_id ?? 'unassigned'
+    const stop = (stopCount.get(techId) ?? 0) + 1
+    stopCount.set(techId, stop)
+    const customer = customerOf(job)
+    const at = customer ? coords.get(customer.id) : undefined
+    if (!at) {
+      unplaced++
+      continue
+    }
+    const status: MapStatus =
+      job.status === 'complete' || job.status === 'cancelled' ? 'done' : ((job.field_status as FieldStatus | null) ?? 'scheduled')
+    mapJobs.push({
+      id: job.id,
+      lat: at.lat,
+      lng: at.lng,
+      time: new Date(job.scheduled_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+      customer: customer?.name ?? 'Customer',
+      address: addressLine(customer?.address ?? null, customer?.city ?? null) ?? '',
+      jobType: job.job_type ?? 'job',
+      techId,
+      techName: techId === 'unassigned' ? 'Unassigned' : techNameById.get(techId) ?? 'Unknown',
+      status,
+      stop,
+    })
   }
 
   const groups = Array.from(byTech.entries()).map(([techId, techJobs]) => ({
@@ -79,6 +132,7 @@ export default async function DispatchPage() {
         </p>
       ) : (
         <div className="space-y-6">
+          {mapJobs.length > 0 && <DispatchMap jobs={mapJobs} unplaced={unplaced} />}
           {groups.map((group) => (
             <div key={group.techId} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
               <div className="px-6 py-3.5 border-b border-gray-100 flex items-center justify-between">
