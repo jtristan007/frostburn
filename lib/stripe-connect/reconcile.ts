@@ -3,10 +3,11 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 // Backup for the Connect webhook: asks Stripe directly whether the invoice's
 // Checkout Session was paid, and marks the invoice paid if so. Called when
-// the customer lands back on the pay page and when the owner opens the
-// invoice, so a missed or misconfigured webhook can't leave a paid invoice
-// looking unpaid (and keep sending overdue reminders). Returns true when the
-// invoice is paid. Never throws.
+// the customer lands back on the pay page, when the owner opens the
+// invoice, and for every started-but-unpaid invoice in the daily cron
+// (reconcileOpenCheckouts), so a missed or misconfigured webhook can't leave
+// a paid invoice looking unpaid (and keep sending overdue reminders).
+// Returns true when the invoice is paid. Never throws.
 export async function reconcileInvoicePayment(invoiceId: string): Promise<boolean> {
   const admin = createAdminClient()
   const { data: invoice } = await admin
@@ -45,4 +46,29 @@ export async function reconcileInvoicePayment(invoiceId: string): Promise<boolea
     console.error('reconcileInvoicePayment failed:', err)
     return false
   }
+}
+
+const MAX_CRON_CHECKS = 200
+const CONCURRENCY = 10
+
+// Daily sweep for the cron: every unpaid invoice whose customer opened
+// Stripe Checkout gets checked once. Runs before overdue reminders so a
+// customer who already paid never gets one. Bounded per run; never throws.
+export async function reconcileOpenCheckouts(): Promise<number> {
+  const admin = createAdminClient()
+  const { data: open } = await admin
+    .from('invoices')
+    .select('id')
+    .in('status', ['draft', 'sent', 'overdue'])
+    .not('stripe_checkout_session_id', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(MAX_CRON_CHECKS)
+
+  const ids = (open ?? []).map((i) => i.id)
+  let marked = 0
+  for (let i = 0; i < ids.length; i += CONCURRENCY) {
+    const results = await Promise.all(ids.slice(i, i + CONCURRENCY).map((id) => reconcileInvoicePayment(id)))
+    marked += results.filter(Boolean).length
+  }
+  return marked
 }
