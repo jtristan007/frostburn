@@ -1,5 +1,9 @@
 import { getCurrentAccount } from '@/lib/account'
-import { syncConnectedAccountStatus } from '@/lib/stripe-connect/client'
+import {
+  isUnreachableConnectedAccount,
+  resetConnectedAccount,
+  syncConnectedAccountStatus,
+} from '@/lib/stripe-connect/client'
 import { connectStripePayments } from '@/app/actions/stripe-connect'
 
 const STATUS_COPY: Record<string, { label: string; tone: string }> = {
@@ -32,6 +36,12 @@ export default async function PaymentsSettingsPage({
       status = await syncConnectedAccountStatus(account.id, account.stripe_connect_account_id)
     } catch (err) {
       console.error('Stripe Connect status sync failed:', err)
+      // The saved account belongs to a different Stripe key: forget it so
+      // "Connect Stripe" starts a fresh connection under the current key.
+      if (isUnreachableConnectedAccount(err)) {
+        await resetConnectedAccount(account.id)
+        status = 'not_connected'
+      }
     }
   }
 

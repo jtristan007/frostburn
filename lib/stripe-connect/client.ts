@@ -117,3 +117,34 @@ export async function syncConnectedAccountStatus(
 
   return status
 }
+
+// True when Stripe says the stored connected account doesn't exist or this
+// API key can't access it -- what happens after switching Stripe keys
+// (test <-> live, or a new platform account): every saved acct_ ID belongs
+// to the old key. Only definitive 403/404 answers count; network errors and
+// 5xx are left alone so a Stripe outage never wipes a working connection.
+export function isUnreachableConnectedAccount(err: unknown): boolean {
+  const e = err as { statusCode?: number; type?: string; code?: string } | null
+  if (!e) return false
+  return (
+    e.statusCode === 403 ||
+    e.statusCode === 404 ||
+    e.type === 'StripePermissionError' ||
+    e.code === 'resource_missing' ||
+    e.code === 'account_invalid'
+  )
+}
+
+// Forgets a connected account the current key can't reach, so the owner
+// can connect again from scratch instead of being stuck on an error.
+export async function resetConnectedAccount(accountId: string): Promise<void> {
+  const admin = createAdminClient()
+  await admin
+    .from('accounts')
+    .update({
+      stripe_connect_account_id: null,
+      stripe_connect_status: 'not_connected',
+      stripe_connect_charges_enabled: false,
+    })
+    .eq('id', accountId)
+}
