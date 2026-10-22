@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getCurrentAccount } from '@/lib/account'
 import { markInvoicePaid } from '@/app/actions/invoices'
+import { SendInvoicePill } from '@/components/dashboard/send-invoice-pill'
 
 const STATUS_COLORS: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-500',
@@ -13,7 +14,7 @@ export default async function InvoicesPage() {
   const { supabase } = await getCurrentAccount()
   const { data: invoices } = await supabase
     .from('invoices')
-    .select('id, invoice_number, status, total, due_date, customers(name)')
+    .select('id, invoice_number, status, total, due_date, customers(name, email)')
     .order('issue_date', { ascending: false })
 
   const revenueAtRisk = (invoices ?? [])
@@ -63,11 +64,18 @@ export default async function InvoicesPage() {
                   <td className="px-6 py-3 text-right text-navy font-medium">${inv.total}</td>
                   <td className="px-6 py-3 text-right">
                     {inv.status !== 'paid' && (
-                      <form action={markInvoicePaid.bind(null, inv.id)}>
-                        <button type="submit" className="text-xs text-ice hover:text-ice-dim font-medium">
-                          Mark paid
-                        </button>
-                      </form>
+                      <div className="flex items-center justify-end gap-4">
+                        <SendInvoicePill
+                          invoiceId={inv.id}
+                          customerEmail={(inv.customers as unknown as { email: string | null } | null)?.email ?? null}
+                          sent={inv.status === 'sent' || inv.status === 'overdue'}
+                        />
+                        <form action={markInvoicePaid.bind(null, inv.id)}>
+                          <button type="submit" className="text-xs text-ice hover:text-ice-dim font-medium">
+                            Mark paid
+                          </button>
+                        </form>
+                      </div>
                     )}
                   </td>
                 </tr>
