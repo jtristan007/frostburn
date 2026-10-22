@@ -30,6 +30,13 @@ export default async function InvoiceViewPage({ params }: { params: Promise<{ id
 
   if (!invoice) notFound()
 
+  // Shown on the invoice (Pay now button on screen, link text when printed)
+  // only when the account can actually take card payments.
+  const payUrl =
+    account.stripe_connect_charges_enabled && invoice.status !== 'paid'
+      ? `${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'}/pay/${invoice.pay_token}`
+      : null
+
   const customer = invoice.customers as unknown as {
     name: string
     email: string | null
@@ -113,6 +120,24 @@ export default async function InvoiceViewPage({ params }: { params: Promise<{ id
           <div className="text-right">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Total due</p>
             <p className="text-3xl font-bold text-navy">${Number(invoice.total).toFixed(2)}</p>
+            {payUrl && (
+              <>
+                <a
+                  href={payUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-block text-sm font-semibold bg-ice text-navy px-5 py-2.5 rounded-lg hover:bg-ice-dim transition-colors print:hidden"
+                >
+                  Pay now →
+                </a>
+                <p className="hidden print:block mt-3 text-xs text-gray-500">
+                  Pay online: <span className="font-medium text-navy break-all">{payUrl}</span>
+                </p>
+              </>
+            )}
+            {invoice.status === 'paid' && (
+              <p className="mt-3 text-sm font-semibold text-green-700">Paid ✓</p>
+            )}
           </div>
         </div>
 
@@ -144,9 +169,7 @@ export default async function InvoiceViewPage({ params }: { params: Promise<{ id
       {account.stripe_connect_charges_enabled && invoice.status !== 'paid' && (
         <div className="bg-white rounded-2xl border border-gray-100 p-6 max-w-2xl mt-6 print:hidden">
           <p className="text-sm text-gray-500 mb-3">Pay-online link for this customer:</p>
-          <code className="block text-xs bg-gray-50 rounded-lg px-3 py-2 break-all">
-            {`${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'}/pay/${invoice.pay_token}`}
-          </code>
+          <code className="block text-xs bg-gray-50 rounded-lg px-3 py-2 break-all">{payUrl}</code>
         </div>
       )}
     </div>
