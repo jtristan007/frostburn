@@ -5,6 +5,7 @@ import { PrintButton } from '@/components/dashboard/print-button'
 import { SendToQuickBooksButton } from '@/components/dashboard/send-to-quickbooks-button'
 import { SendInvoiceButton } from '@/components/dashboard/send-invoice-button'
 import { getConnectionStatus } from '@/lib/quickbooks/client'
+import { reconcileInvoicePayment } from '@/lib/stripe-connect/reconcile'
 
 const STATUS_LABELS: Record<string, string> = {
   draft: 'Draft',
@@ -29,6 +30,11 @@ export default async function InvoiceViewPage({ params }: { params: Promise<{ id
   ])
 
   if (!invoice) notFound()
+
+  // Catch payments the Connect webhook missed before showing the status.
+  if (invoice.status !== 'paid' && account.stripe_connect_charges_enabled && (await reconcileInvoicePayment(invoice.id))) {
+    invoice.status = 'paid'
+  }
 
   // Shown on the invoice (Pay now button on screen, link text when printed)
   // only when the account can actually take card payments.
