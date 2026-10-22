@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getInvoiceByToken, payInvoice } from '@/app/actions/invoices'
 import { Logo } from '@/components/logo'
+import { reconcileInvoicePayment } from '@/lib/stripe-connect/reconcile'
 
 export default async function PayInvoicePage({
   params,
@@ -15,7 +16,9 @@ export default async function PayInvoicePage({
   if (!result) notFound()
 
   const { invoice, companyName, customerName, chargesEnabled } = result
-  const isPaid = paid === '1' || invoice.status === 'paid'
+  // Confirm with Stripe rather than trusting ?paid=1 from the redirect.
+  const isPaid = invoice.status === 'paid' || (await reconcileInvoicePayment(invoice.id))
+  const processing = paid === '1' && !isPaid
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6 py-16">
@@ -38,7 +41,11 @@ export default async function PayInvoicePage({
             <span className="text-navy">${Number(invoice.total).toFixed(2)}</span>
           </div>
 
-          {isPaid ? (
+          {processing ? (
+            <div className="mt-6 bg-ice/10 border border-ice/30 rounded-xl px-4 py-3 text-sm text-navy font-medium">
+              Thanks! Your payment is processing. This page will show Paid once it clears.
+            </div>
+          ) : isPaid ? (
             <div className="mt-6 bg-green-50 border border-green-100 rounded-xl px-4 py-3 text-sm text-green-700 font-medium">
               Paid ✓ — thank you.
             </div>
