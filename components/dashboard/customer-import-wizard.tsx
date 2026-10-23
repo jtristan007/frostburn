@@ -4,7 +4,7 @@ import { useActionState, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { bulkImportCustomers, type ImportResult } from '@/app/actions/customers'
 import { parseCsv } from '@/lib/csv/parse'
-import { CUSTOMER_FIELDS, guessFieldForHeader, type ColumnTarget } from '@/lib/csv/customer-fields'
+import { COLUMN_TARGETS, buildCustomer, guessMapping, hasNameSource, type ColumnTarget } from '@/lib/csv/customer-fields'
 
 type Step = 'upload' | 'map' | 'review'
 
@@ -13,6 +13,15 @@ type ParsedFile = {
   headers: string[]
   rows: string[][]
 }
+
+// Export steps from each app's own help docs (Jobber: "Export Client
+// Information"; Housecall Pro customer list download). Re-check if the
+// apps change their menus.
+const EXPORT_HELP = [
+  { app: 'Jobber', steps: 'Clients → More Actions → Export Clients → CSV. Jobber emails you the file.' },
+  { app: 'Housecall Pro', steps: 'Customers → More → Download customer list. Housecall Pro emails you an Excel file.' },
+  { app: 'QuickBooks', steps: 'Open your customer list and choose Export to Excel, then upload that file.' },
+]
 
 const STEPS: { key: Step; label: string }[] = [
   { key: 'upload', label: 'Upload' },
@@ -45,27 +54,47 @@ export function CustomerImportWizard() {
 
   const stepIndex = STEPS.findIndex((s) => s.key === step)
 
-  function handleFile(file: File) {
+  function loadTable(fileName: string, table: string[][]) {
+    const rows = table.filter((r) => r.some((c) => c.trim()))
+    if (rows.length < 2) {
+      setFileError('That file needs a header row plus at least one customer row.')
+      return
+    }
+    const [headerRow, ...dataRows] = rows
+    const headers = headerRow.map((h) => h.trim() || '(blank)')
+    setParsed({ fileName, headers, rows: dataRows })
+    setMapping(guessMapping(headers))
+    setStep('map')
+  }
+
+  async function handleFile(file: File) {
     setFileError(null)
-    const looksLikeCsv = file.name.toLowerCase().endsWith('.csv') || file.type === 'text/csv'
-    if (!looksLikeCsv) {
-      setFileError('Please choose a .csv file.')
+    const lower = file.name.toLowerCase()
+    if (lower.endsWith('.xlsx')) {
+      try {
+        // Loaded only when someone picks an Excel file (Housecall Pro and
+        // QuickBooks export .xlsx), so the page itself stays light.
+        const { readSheet } = await import('read-excel-file/browser')
+        const sheet = await readSheet(file)
+        loadTable(
+          file.name,
+          sheet.map((row) => row.map((c) => (c === null || c === undefined || c instanceof Date ? '' : String(c))))
+        )
+      } catch {
+        setFileError('Could not read that Excel file. Try saving it as CSV and uploading again.')
+      }
+      return
+    }
+    if (lower.endsWith('.xls')) {
+      setFileError('That is an old Excel format. Open it and save as .xlsx or .csv, then upload again.')
+      return
+    }
+    if (!lower.endsWith('.csv') && file.type !== 'text/csv') {
+      setFileError('Please choose a .csv or .xlsx file.')
       return
     }
     const reader = new FileReader()
-    reader.onload = () => {
-      const text = String(reader.result ?? '')
-      const table = parseCsv(text)
-      if (table.length < 2) {
-        setFileError('That file needs a header row plus at least one customer row.')
-        return
-      }
-      const [headerRow, ...dataRows] = table
-      const headers = headerRow.map((h) => h.trim() || '(blank)')
-      setParsed({ fileName: file.name, headers, rows: dataRows })
-      setMapping(headers.map(guessFieldForHeader))
-      setStep('map')
-    }
+    reader.onload = () => loadTable(file.name, parseCsv(String(reader.result ?? '')))
     reader.onerror = () => setFileError('Could not read that file.')
     reader.readAsText(file)
   }
@@ -79,24 +108,12 @@ export function CustomerImportWizard() {
 
   const mappedRows = useMemo(() => {
     if (!parsed) return []
-    const fieldIndex: Partial<Record<string, number>> = {}
-    mapping.forEach((target, i) => {
-      if (target !== 'skip') fieldIndex[target] = i
-    })
-    return parsed.rows.map((row) => ({
-      name: fieldIndex.name !== undefined ? (row[fieldIndex.name] ?? '').trim() : '',
-      email: fieldIndex.email !== undefined ? (row[fieldIndex.email] ?? '').trim() : '',
-      phone: fieldIndex.phone !== undefined ? (row[fieldIndex.phone] ?? '').trim() : '',
-      address: fieldIndex.address !== undefined ? (row[fieldIndex.address] ?? '').trim() : '',
-      city: fieldIndex.city !== undefined ? (row[fieldIndex.city] ?? '').trim() : '',
-      notes: fieldIndex.notes !== undefined ? (row[fieldIndex.notes] ?? '').trim() : '',
-      _raw: row,
-    }))
+    return parsed.rows.map((row) => ({ ...buildCustomer(row, mapping), _raw: row }))
   }, [parsed, mapping])
 
   const readyRows = mappedRows.filter((r) => r.name)
   const skippedRows = mappedRows.filter((r) => !r.name)
-  const hasNameMapped = mapping.includes('name')
+  const hasNameMapped = hasNameSource(mapping)
 
   // Terminal success screen -- stays up regardless of `step` once the
   // action reports rows actually inserted.
@@ -177,18 +194,26 @@ export function CustomerImportWizard() {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".csv,text/csv"
+              accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0]
                 if (file) handleFile(file)
               }}
             />
-            <p className="text-sm font-medium text-navy">Drop a CSV file here, or click to browse</p>
+            <p className="text-sm font-medium text-navy">Drop your client export here, or click to browse</p>
             <p className="text-xs text-gray-400 mt-1.5">
-              Works with an export from Jobber, Housecall Pro, QuickBooks, or any spreadsheet —
-              you&apos;ll map the columns yourself on the next step.
+              CSV or Excel (.xlsx), straight from Jobber, Housecall Pro, QuickBooks or any spreadsheet.
+              We match the columns for you; you just check them.
             </p>
+          </div>
+          <div className="mt-6 grid sm:grid-cols-3 gap-3 text-xs text-gray-500">
+            {EXPORT_HELP.map((h) => (
+              <div key={h.app} className="rounded-xl bg-gray-50 p-4">
+                <p className="font-semibold text-navy mb-1">From {h.app}</p>
+                <p>{h.steps}</p>
+              </div>
+            ))}
           </div>
           {fileError && <p className="text-sm text-red-500 mt-4">{fileError}</p>}
         </div>
@@ -206,47 +231,36 @@ export function CustomerImportWizard() {
           </p>
 
           <div className="space-y-3">
-            {parsed.headers.map((header, i) => {
-              const usedElsewhere = new Set(
-                mapping.filter((_, j) => j !== i && mapping[j] !== 'skip').map((m) => m)
-              )
-              return (
-                <div
-                  key={i}
-                  className="flex items-center gap-4 border border-gray-100 rounded-xl p-3.5"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium text-navy truncate">{header}</div>
-                    <div className="text-xs text-gray-400 truncate mt-0.5">
-                      {sampleValues(parsed.rows, i).join(' · ') || 'no sample values'}
-                    </div>
+            {parsed.headers.map((header, i) => (
+              <div key={i} className="flex items-center gap-4 border border-gray-100 rounded-xl p-3.5">
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium text-navy truncate">{header}</div>
+                  <div className="text-xs text-gray-400 truncate mt-0.5">
+                    {sampleValues(parsed.rows, i).join(' · ') || 'no sample values'}
                   </div>
-                  <select
-                    value={mapping[i]}
-                    onChange={(e) => {
-                      const next = [...mapping]
-                      next[i] = e.target.value as ColumnTarget
-                      setMapping(next)
-                    }}
-                    className="text-sm px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ice focus:border-transparent bg-white shrink-0"
-                  >
-                    <option value="skip">Don&apos;t import</option>
-                    {CUSTOMER_FIELDS.filter((f) => !usedElsewhere.has(f.value) || f.value === mapping[i]).map(
-                      (f) => (
-                        <option key={f.value} value={f.value}>
-                          {f.label}
-                          {f.required ? ' (required)' : ''}
-                        </option>
-                      )
-                    )}
-                  </select>
                 </div>
-              )
-            })}
+                <select
+                  value={mapping[i]}
+                  onChange={(e) => {
+                    const next = [...mapping]
+                    next[i] = e.target.value as ColumnTarget
+                    setMapping(next)
+                  }}
+                  className="text-sm px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ice focus:border-transparent bg-white shrink-0"
+                >
+                  <option value="skip">Don&apos;t import</option>
+                  {COLUMN_TARGETS.map((f) => (
+                    <option key={f.value} value={f.value}>
+                      {f.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ))}
           </div>
 
           {!hasNameMapped && (
-            <p className="text-sm text-amber mt-4">Map one column to Name to continue.</p>
+            <p className="text-sm text-amber mt-4">Map a column to Full name, First name, Last name or Company to continue.</p>
           )}
 
           <div className="flex items-center justify-between mt-6">
@@ -291,7 +305,7 @@ export function CustomerImportWizard() {
                     <th className="text-left font-medium px-3.5 py-2">Name</th>
                     <th className="text-left font-medium px-3.5 py-2">Email</th>
                     <th className="text-left font-medium px-3.5 py-2">Phone</th>
-                    <th className="text-left font-medium px-3.5 py-2">City</th>
+                    <th className="text-left font-medium px-3.5 py-2">Address</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -300,7 +314,7 @@ export function CustomerImportWizard() {
                       <td className="px-3.5 py-2 text-navy">{r.name}</td>
                       <td className="px-3.5 py-2 text-gray-400">{r.email || '—'}</td>
                       <td className="px-3.5 py-2 text-gray-400">{r.phone || '—'}</td>
-                      <td className="px-3.5 py-2 text-gray-400">{r.city || '—'}</td>
+                      <td className="px-3.5 py-2 text-gray-400">{[r.address, r.city].filter(Boolean).join(', ') || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -338,7 +352,7 @@ export function CustomerImportWizard() {
           )}
 
           <form action={formAction}>
-            <input type="hidden" name="rows_json" value={JSON.stringify(readyRows)} />
+            <input type="hidden" name="rows_json" value={JSON.stringify(readyRows.map((r) => ({ name: r.name, email: r.email, phone: r.phone, address: r.address, city: r.city, notes: r.notes })))} />
             <div className="flex items-center justify-between">
               <button
                 type="button"
