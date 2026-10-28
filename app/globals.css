@@ -77,7 +77,27 @@ body {
   animation: rise-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* The same rise without the fade, for the hero headline: it's the LCP
+   element on mobile, and an element at opacity 0 doesn't count as painted,
+   so the fade held LCP back until the main thread got to it (~4 s). */
+@keyframes rise-in-solid {
+  from {
+    transform: translateY(16px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.rise-solid {
+  animation: rise-in-solid 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .rise-solid {
+    animation: none;
+    transform: none;
+  }
   .rise {
     animation: none;
     opacity: 1;

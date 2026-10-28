@@ -292,7 +292,7 @@ export function FrostHero() {
             Built for small HVAC operators
           </p>
           <h1
-            className="rise mt-6 font-display font-bold tracking-tight text-white text-5xl leading-[1.02]"
+            className="rise-solid mt-6 font-display font-bold tracking-tight text-white text-5xl leading-[1.02]"
             style={{ animationDelay: '0.18s' }}
           >
             Run your HVAC company
