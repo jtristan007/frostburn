@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { preload } from 'react-dom'
 import Link from 'next/link'
 import { Logo } from '@/components/logo'
 
@@ -155,6 +156,10 @@ function useFrostTrail(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
 }
 
 export function FrostHero() {
+  // frost-bg.jpg is the hero's LCP element, but as a CSS background it can't
+  // carry fetchpriority -- preload it from <head> at high priority instead.
+  preload('/frost-bg.jpg', { as: 'image', fetchPriority: 'high' })
+
   const isothermsRef = useRef<HTMLCanvasElement>(null)
   const trailRef = useRef<HTMLCanvasElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)

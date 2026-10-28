@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, Bricolage_Grotesque, IBM_Plex_Mono } from 'next/font/google'
+import { Inter, Bricolage_Grotesque, IBM_Plex_Mono, Bebas_Neue } from 'next/font/google'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -9,6 +9,9 @@ const plexMono = IBM_Plex_Mono({
   weight: ['400', '500'],
   variable: '--font-mono-raw',
 })
+// The logo wordmark's face. Self-hosted by next/font so the logo no longer
+// pulls a render-blocking stylesheet from fonts.googleapis.com.
+const bebas = Bebas_Neue({ subsets: ['latin'], weight: '400', variable: '--font-logo' })
 
 const SITE_TITLE = 'Frostburn — Run your HVAC company without hiring an office admin'
 const SITE_DESCRIPTION =
@@ -40,7 +43,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${bricolage.variable} ${plexMono.variable}`}>
+    <html lang="en" className={`${inter.variable} ${bricolage.variable} ${plexMono.variable} ${bebas.variable}`}>
       <body className="min-h-screen bg-white text-navy antialiased font-sans">
         {children}
       </body>

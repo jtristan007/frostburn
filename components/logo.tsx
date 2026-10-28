@@ -1,12 +1,11 @@
-// Inlined (not <img src>) so the Bebas Neue @import in the <style> block
-// actually loads -- browsers don't reliably fetch external stylesheets
-// referenced from inside an SVG that's loaded via <img>, which silently
-// falls back to a wider system font and clips the wordmark's last letter.
+// Inlined (not <img src>) so the wordmark uses Bebas Neue from the page --
+// an SVG loaded via <img> can't see the page's fonts, which silently falls
+// back to a wider system font and clips the wordmark's last letter. The face
+// itself is self-hosted by next/font in app/layout.tsx (--font-logo).
 export function Logo({ className = 'h-10' }: { className?: string }) {
   return (
     <svg viewBox="0 0 500 120" role="img" aria-label="Frostburn" className={className}>
       <defs>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');`}</style>
         <linearGradient id="badgeFill" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#0D1530" />
           <stop offset="100%" stopColor="#05091A" />
@@ -43,7 +42,7 @@ export function Logo({ className = 'h-10' }: { className?: string }) {
       <text
         x="130"
         y="79"
-        fontFamily="'Bebas Neue', 'Arial Narrow', sans-serif"
+        style={{ fontFamily: "var(--font-logo), 'Arial Narrow', sans-serif" }}
         fontSize="60"
         letterSpacing="1"
       >
