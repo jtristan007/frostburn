@@ -180,7 +180,7 @@ export default function LandingPage() {
         className="fixed inset-0 -z-50 pointer-events-none"
         style={{
           backgroundImage:
-            'linear-gradient(180deg, rgba(5,7,15,0.8), rgba(5,7,15,0.94)), url(/frost-bg.jpg)',
+            'linear-gradient(180deg, rgba(5,7,15,0.8), rgba(5,7,15,0.94)), url(/frost-bg.webp)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           opacity: 0.4,
@@ -207,7 +207,7 @@ export default function LandingPage() {
               controls
               playsInline
               preload="none"
-              poster="/frostburn-demo-poster.jpg"
+              poster="/frostburn-demo-poster.webp"
               width={1920}
               height={1080}
             >

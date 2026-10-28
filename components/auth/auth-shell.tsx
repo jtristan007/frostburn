@@ -21,7 +21,7 @@ export function AuthShell({
         className="fixed inset-0 -z-10 pointer-events-none"
         style={{
           backgroundImage:
-            'linear-gradient(180deg, rgba(5,7,15,0.82), rgba(5,7,15,0.95)), url(/frost-bg.jpg)',
+            'linear-gradient(180deg, rgba(5,7,15,0.82), rgba(5,7,15,0.95)), url(/frost-bg.webp)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           opacity: 0.35,
