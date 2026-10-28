@@ -156,9 +156,9 @@ function useFrostTrail(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
 }
 
 export function FrostHero() {
-  // frost-bg.jpg is the hero's LCP element, but as a CSS background it can't
+  // frost-bg.webp is the hero's LCP element, but as a CSS background it can't
   // carry fetchpriority -- preload it from <head> at high priority instead.
-  preload('/frost-bg.jpg', { as: 'image', fetchPriority: 'high' })
+  preload('/frost-bg.webp', { as: 'image', fetchPriority: 'high' })
 
   const isothermsRef = useRef<HTMLCanvasElement>(null)
   const trailRef = useRef<HTMLCanvasElement>(null)
@@ -234,7 +234,7 @@ export function FrostHero() {
         className="absolute inset-0 -z-40"
         style={{
           background:
-            'linear-gradient(90deg, #05070f 0%, #05070f 30%, rgba(5,7,15,0.55) 44%, rgba(5,7,15,0.15) 62%, transparent 80%), radial-gradient(ellipse 700px 600px at 88% 92%, rgba(245,158,11,0.14), transparent 55%), url(/frost-bg.jpg) center right / cover no-repeat, #05070f',
+            'linear-gradient(90deg, #05070f 0%, #05070f 30%, rgba(5,7,15,0.55) 44%, rgba(5,7,15,0.15) 62%, transparent 80%), radial-gradient(ellipse 700px 600px at 88% 92%, rgba(245,158,11,0.14), transparent 55%), url(/frost-bg.webp) center right / cover no-repeat, #05070f',
         }}
       />
       <div
