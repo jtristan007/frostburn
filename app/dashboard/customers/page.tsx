@@ -30,7 +30,24 @@ export default async function CustomersPage() {
 
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
         {(customers ?? []).length === 0 ? (
-          <p className="text-sm text-gray-400 p-6">No customers yet.</p>
+          <div className="p-8 sm:p-10 text-center">
+            <p className="text-base font-semibold text-navy">Bring your customers over</p>
+            <p className="mt-1 text-sm text-gray-500 max-w-md mx-auto">
+              Export your client list from Jobber, Housecall Pro or QuickBooks and import it here. It takes about a
+              minute and nobody gets emailed.
+            </p>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                href="/dashboard/customers/import"
+                className="text-sm font-semibold bg-ice text-navy px-4 py-2 rounded-lg hover:bg-ice-dim transition-colors"
+              >
+                Import customers
+              </Link>
+              <Link href="/dashboard/customers/new" className="text-sm font-medium text-sky-600 hover:text-navy">
+                Or add one by hand
+              </Link>
+            </div>
+          </div>
         ) : (
           <table className="w-full text-sm">
             <tbody>

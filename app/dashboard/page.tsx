@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { getCurrentAccount } from '@/lib/account'
 import { KpiTile, ICONS } from '@/components/dashboard/kpi-tile'
 import { RevenueChart, type Bucket } from '@/components/dashboard/revenue-chart'
+import { SetupChecklist, type SetupStep } from '@/components/dashboard/setup-checklist'
+import { TRIAL_PERIOD_DAYS } from '@/lib/stripe/plans'
 
 function isoDate(d: Date) {
   return d.toISOString().slice(0, 10)
@@ -24,7 +26,12 @@ const STATUS = [
   { key: 'paid', label: 'Paid this month', dot: 'bg-emerald-500', note: 'collected' },
 ] as const
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ checkout?: string }>
+}) {
+  const { checkout } = await searchParams
   const { supabase, account } = await getCurrentAccount()
 
   const today = new Date()
@@ -35,8 +42,16 @@ export default async function DashboardPage() {
   const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0)
   const sixMonthsAgo = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - 5, 1))
 
-  const [openInvoices, paidInvoices, customerCount, jobsToday, activeAgreements, renewingThisMonth, servicesDueThisWeek] =
-    await Promise.all([
+  const [
+    openInvoices,
+    paidInvoices,
+    customerCount,
+    jobsToday,
+    activeAgreements,
+    renewingThisMonth,
+    servicesDueThisWeek,
+    deliveredInvoices,
+  ] = await Promise.all([
       supabase.from('invoices').select('status, total').in('status', ['draft', 'sent', 'overdue']),
       supabase
         .from('invoices')
@@ -60,7 +75,44 @@ export default async function DashboardPage() {
         .select('id', { count: 'exact', head: true })
         .gte('next_service_date', todayStr)
         .lte('next_service_date', isoDate(weekOut)),
+      // Any invoice that has left draft -- emailed, or recorded as paid.
+      supabase.from('invoices').select('id', { count: 'exact', head: true }).neq('status', 'draft'),
     ])
+
+  const hasCustomers = (customerCount.count ?? 0) > 0
+  const setupSteps: SetupStep[] = [
+    {
+      key: 'customers',
+      title: 'Bring in your customers',
+      description: 'Import your list from Jobber, Housecall Pro or QuickBooks in about a minute, or add them one at a time.',
+      done: hasCustomers,
+      cta: { href: '/dashboard/customers/import', label: 'Import customers' },
+      secondary: { href: '/dashboard/customers/new', label: 'Add one customer' },
+    },
+    {
+      key: 'payments',
+      title: 'Turn on card payments',
+      description: 'Connect Stripe so every invoice you send has a Pay now button. Money goes straight to your bank.',
+      done: !!account.stripe_connect_charges_enabled,
+      cta: { href: '/dashboard/settings/payments', label: 'Connect payments' },
+    },
+    {
+      key: 'invoice',
+      title: 'Send your first invoice',
+      description: hasCustomers
+        ? 'Create an invoice and email it to your customer straight from Frostburn.'
+        : 'Once you have a customer, create an invoice and email it straight from Frostburn.',
+      done: (deliveredInvoices.count ?? 0) > 0,
+      cta: { href: '/dashboard/invoices/new', label: 'Create an invoice' },
+    },
+    {
+      key: 'plan',
+      title: `Start your ${TRIAL_PERIOD_DAYS}-day free trial`,
+      description: 'Pick a plan to unlock inviting your techs. No credit card required to start.',
+      done: !!account.tier,
+      cta: { href: '/onboarding/plan', label: 'Choose a plan' },
+    },
+  ]
 
   // Paid revenue lands on the day it was paid (issue date for invoices marked
   // paid by hand before paid_at existed).
@@ -113,7 +165,7 @@ export default async function DashboardPage() {
       <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-navy mb-1">
-            Welcome back, {account.name}
+            {hasCustomers ? 'Welcome back' : 'Welcome to Frostburn'}, {account.name}
           </h1>
           <p className="text-sm text-gray-500">
             {today.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
@@ -126,6 +178,14 @@ export default async function DashboardPage() {
           + New invoice
         </Link>
       </div>
+
+      {checkout === 'success' && (
+        <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3 mb-6 text-sm text-emerald-800">
+          You&apos;re all set — your {TRIAL_PERIOD_DAYS}-day free trial has started.
+        </div>
+      )}
+
+      <SetupChecklist steps={setupSteps} />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
         <KpiTile
