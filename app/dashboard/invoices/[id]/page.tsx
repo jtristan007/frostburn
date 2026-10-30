@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCurrentAccount } from '@/lib/account'
-import { countryOf, formatMoney } from '@/lib/money'
+import { countryOf, formatMoney, taxBreakdown } from '@/lib/money'
 import { PrintButton } from '@/components/dashboard/print-button'
 import { SendToQuickBooksButton } from '@/components/dashboard/send-to-quickbooks-button'
 import { SendInvoiceButton } from '@/components/dashboard/send-invoice-button'
@@ -22,15 +22,15 @@ export default async function InvoiceViewPage({ params }: { params: Promise<{ id
   const [{ data: invoice }, qbStatus] = await Promise.all([
     supabase
       .from('invoices')
-      .select(
-        'id, invoice_number, status, issue_date, due_date, total, qb_invoice_id, pay_token, job_id, customers(name, email, phone, address, city)'
-      )
+      // '*' so subtotal/tax_rate come along once migration 0018 has run.
+      .select('*, customers(name, email, phone, address, city)')
       .eq('id', id)
       .maybeSingle(),
     getConnectionStatus(account.id),
   ])
 
   if (!invoice) notFound()
+  const tax = taxBreakdown(invoice)
 
   // Catch payments the Connect webhook missed before showing the status.
   if (invoice.status !== 'paid' && account.stripe_connect_charges_enabled && (await reconcileInvoicePayment(invoice.id))) {
@@ -96,7 +96,10 @@ export default async function InvoiceViewPage({ params }: { params: Promise<{ id
               // eslint-disable-next-line @next/next/no-img-element
               <img src={account.logo_url} alt={account.name} className="h-14 w-auto object-contain" />
             ) : null}
-            <p className="text-lg font-bold text-navy">{account.name}</p>
+            <div>
+              <p className="text-lg font-bold text-navy">{account.name}</p>
+              {account.gst_number && <p className="text-xs text-gray-400">GST/HST No. {account.gst_number}</p>}
+            </div>
           </div>
           <div className="text-right">
             <p className="text-2xl font-bold text-navy tracking-tight">INVOICE</p>
@@ -125,6 +128,16 @@ export default async function InvoiceViewPage({ params }: { params: Promise<{ id
 
         <div className="border-t border-gray-100 pt-6 flex justify-end">
           <div className="text-right">
+            {tax && (
+              <div className="mb-4 space-y-1 text-sm text-gray-500">
+                <p>
+                  Subtotal <span className="ml-6 text-navy">{formatMoney(tax.subtotal, countryOf(account))}</span>
+                </p>
+                <p>
+                  {tax.label} <span className="ml-6 text-navy">{formatMoney(tax.tax, countryOf(account))}</span>
+                </p>
+              </div>
+            )}
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Total due</p>
             <p className="text-3xl font-bold text-navy">{formatMoney(Number(invoice.total), countryOf(account))}</p>
             {payUrl && (

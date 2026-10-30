@@ -1,5 +1,5 @@
 import { resend, EMAIL_FROM } from '@/lib/resend/client'
-import { formatMoney, type Country } from '@/lib/money'
+import { formatMoney, type Country, type TaxBreakdown } from '@/lib/money'
 
 // Server-only. Every function here swallows its own send error (logs, does
 // not throw) -- a failed notification email should never break the
@@ -150,8 +150,11 @@ export async function sendInvoiceEmail(params: {
   dueDate: string | null
   payUrl: string | null
   country: Country
+  tax?: TaxBreakdown | null
+  gstNumber?: string | null
 }): Promise<boolean> {
-  const { to, replyTo, customerName, companyName, invoiceNumber, total, dueDate, payUrl, country } = params
+  const { to, replyTo, customerName, companyName, invoiceNumber, total, dueDate, payUrl, country, tax, gstNumber } =
+    params
   const company = esc(companyName)
   try {
     const { error } = await resend.emails.send({
@@ -165,7 +168,13 @@ export async function sendInvoiceEmail(params: {
         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin:16px 0;">
           <div style="font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.04em;">Amount due</div>
           <div style="font-size:24px; font-weight:700;">${formatMoney(total, country)}</div>
+          ${
+            tax
+              ? `<div style="font-size:13px; color:#64748b; margin-top:4px;">${formatMoney(tax.subtotal, country)} + ${esc(tax.label)} ${formatMoney(tax.tax, country)}</div>`
+              : ''
+          }
           ${dueDate ? `<div style="font-size:13px; color:#64748b; margin-top:4px;">Due ${esc(dueDate)}</div>` : ''}
+          ${gstNumber ? `<div style="font-size:12px; color:#94a3b8; margin-top:8px;">GST/HST No. ${esc(gstNumber)}</div>` : ''}
         </div>
         ${
           payUrl

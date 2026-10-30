@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { getCurrentAccount } from '@/lib/account'
 import { createInvoice } from '@/app/actions/invoices'
 import { CustomerSelect } from '@/components/dashboard/customer-select'
+import { InvoiceAmountFields } from '@/components/dashboard/invoice-amount-fields'
+import { DEFAULT_CA_TAX_RATE, countryOf } from '@/lib/money'
 
 const inputClass =
   'w-full px-3.5 py-2.5 rounded-lg border border-gray-200 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-ice focus:border-transparent transition'
@@ -13,7 +15,7 @@ function nextInvoiceNumber() {
 }
 
 export default async function NewInvoicePage() {
-  const { supabase } = await getCurrentAccount()
+  const { supabase, account } = await getCurrentAccount()
   const [{ data: customers }, { data: jobs }] = await Promise.all([
     supabase.from('customers').select('id, name').order('name'),
     supabase.from('jobs').select('id, job_type, scheduled_date, customers(name)').order('scheduled_date', { ascending: false }),
@@ -76,10 +78,7 @@ export default async function NewInvoicePage() {
             ))}
           </select>
         </div>
-        <div>
-          <label className={labelClass} htmlFor="total">Total ($)</label>
-          <input id="total" name="total" type="number" step="0.01" required className={inputClass} />
-        </div>
+        <InvoiceAmountFields country={countryOf(account)} defaultTaxRate={DEFAULT_CA_TAX_RATE} />
         <div>
           <label className={labelClass} htmlFor="issue_date">Issue date</label>
           <input
