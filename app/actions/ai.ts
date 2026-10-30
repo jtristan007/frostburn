@@ -2,11 +2,12 @@
 
 import { getCurrentAccount } from '@/lib/account'
 import { buildSnapshot } from '@/lib/ai/snapshot'
+import { accountTimeZone } from '@/lib/tz'
 import { askClaude, type ChatMessage } from '@/lib/anthropic/client'
 
 export async function askAssistant(history: ChatMessage[]): Promise<string> {
   const { supabase, account } = await getCurrentAccount()
-  const snapshot = await buildSnapshot(supabase, account.name)
+  const snapshot = await buildSnapshot(supabase, account.name, accountTimeZone(account))
 
   const system = `You are Frostburn's AI assistant for ${account.name}, an HVAC service company using the Frostburn platform. You help the owner catch what needs attention: overdue invoices, agreements coming up for renewal, today's jobs, and equipment maintenance flags.
 

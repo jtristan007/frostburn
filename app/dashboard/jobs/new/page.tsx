@@ -1,4 +1,5 @@
 import { getCurrentAccount } from '@/lib/account'
+import { BrowserTimeZoneInput } from '@/components/dashboard/browser-timezone-input'
 import { createJob } from '@/app/actions/jobs'
 import { CustomerSelect } from '@/components/dashboard/customer-select'
 
@@ -24,6 +25,7 @@ export default async function NewJobPage() {
     <div className="max-w-lg">
       <h1 className="text-2xl font-bold text-navy mb-6">New Job</h1>
       <form action={createJob} className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+        <BrowserTimeZoneInput />
         <div>
           <label className={labelClass} htmlFor="customer_id">Customer</label>
           <CustomerSelect customers={customers ?? []} />

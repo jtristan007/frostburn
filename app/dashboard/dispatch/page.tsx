@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { after } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentAccount } from '@/lib/account'
+import { accountTimeZone, dayRangeUtc, todayIn } from '@/lib/tz'
 import { updateFieldStatus, type FieldStatus } from '@/app/actions/jobs'
 import { partitionByCoordinates, geocodePending, addressLine } from '@/lib/geocode'
 import { DispatchMap, type MapJob, type MapStatus } from '@/components/dashboard/dispatch-map'
@@ -37,8 +38,11 @@ const NEXT_STATUS_LABEL: Record<FieldStatus, string> = {
 }
 
 export default async function DispatchPage() {
-  const { supabase } = await getCurrentAccount()
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const { supabase, account } = await getCurrentAccount()
+  // "Today" and job times in the shop's own zone, not the server's UTC.
+  const tz = accountTimeZone(account)
+  const todayStr = todayIn(tz)
+  const { start: dayStart, end: dayEnd } = dayRangeUtc(todayStr, tz)
 
   const [{ data: jobs }, { data: technicians }] = await Promise.all([
     supabase
@@ -46,8 +50,8 @@ export default async function DispatchPage() {
       .select(
         'id, job_type, scheduled_date, status, field_status, assigned_technician_id, customers(id, name, address, city, latitude, longitude, geocoded_address)'
       )
-      .gte('scheduled_date', `${todayStr}T00:00:00`)
-      .lt('scheduled_date', `${todayStr}T23:59:59`)
+      .gte('scheduled_date', dayStart)
+      .lt('scheduled_date', dayEnd)
       .order('scheduled_date'),
     supabase.from('account_users').select('user_id, full_name'),
   ])
@@ -99,7 +103,7 @@ export default async function DispatchPage() {
       id: job.id,
       lat: at.lat,
       lng: at.lng,
-      time: new Date(job.scheduled_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+      time: new Date(job.scheduled_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: tz }),
       customer: customer?.name ?? 'Customer',
       address: addressLine(customer?.address ?? null, customer?.city ?? null) ?? '',
       jobType: job.job_type ?? 'job',
@@ -122,7 +126,7 @@ export default async function DispatchPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-navy">Dispatch</h1>
         <p className="text-sm text-gray-400">
-          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: tz })}
         </p>
       </div>
 
@@ -163,6 +167,7 @@ export default async function DispatchPage() {
                             {new Date(job.scheduled_date).toLocaleTimeString('en-US', {
                               hour: 'numeric',
                               minute: '2-digit',
+                              timeZone: tz,
                             })}
                           </span>
                           <span className="text-sm font-medium text-navy truncate">

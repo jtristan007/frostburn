@@ -3,15 +3,33 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentAccount } from '@/lib/account'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { accountTimeZone, isValidTimeZone, wallTimeToUtcIso } from '@/lib/tz'
 
-function readJobFields(formData: FormData) {
+// The form's datetime-local value is a wall-clock time in the shop's zone.
+// It used to be inserted as-is, which Postgres read as UTC -- a 9:00 job in
+// Vancouver showed as 2:00 AM. The first time a job is scheduled, the shop's
+// zone is recorded from the owner's browser.
+async function jobTimeZone(formData: FormData) {
+  const { account } = await getCurrentAccount()
+  const browserTz = (formData.get('browser_tz') as string) || ''
+  if (!account.timezone && browserTz && isValidTimeZone(browserTz)) {
+    const { error } = await createAdminClient().from('accounts').update({ timezone: browserTz }).eq('id', account.id)
+    if (!error) return browserTz
+  }
+  return accountTimeZone(account)
+}
+
+function readJobFields(formData: FormData, tz: string) {
+  const local = formData.get('scheduled_date') as string
   return {
     customer_id: formData.get('customer_id') as string,
     equipment_id: (formData.get('equipment_id') as string) || null,
     agreement_id: (formData.get('agreement_id') as string) || null,
     included_visit: formData.get('included_visit') === 'on',
     job_type: formData.get('job_type') as string,
-    scheduled_date: formData.get('scheduled_date') as string,
+    scheduled_date: wallTimeToUtcIso(local, tz) ?? local,
     assigned_technician_id: (formData.get('assigned_technician_id') as string) || null,
     status: formData.get('status') as string,
     notes: (formData.get('notes') as string) || null,
@@ -19,15 +37,17 @@ function readJobFields(formData: FormData) {
 }
 
 export async function createJob(formData: FormData) {
+  const tz = await jobTimeZone(formData)
   const supabase = await createClient()
-  const { error } = await supabase.from('jobs').insert(readJobFields(formData))
+  const { error } = await supabase.from('jobs').insert(readJobFields(formData, tz))
   if (error) throw new Error(error.message)
   redirect('/dashboard/jobs')
 }
 
 export async function updateJob(id: string, formData: FormData) {
+  const tz = await jobTimeZone(formData)
   const supabase = await createClient()
-  const { error } = await supabase.from('jobs').update(readJobFields(formData)).eq('id', id)
+  const { error } = await supabase.from('jobs').update(readJobFields(formData, tz)).eq('id', id)
   if (error) throw new Error(error.message)
   redirect('/dashboard/jobs')
 }

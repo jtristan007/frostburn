@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendInvoiceReminderEmail, sendMorningBriefingEmail } from '@/lib/resend/emails'
 import { reconcileOpenCheckouts } from '@/lib/stripe-connect/reconcile'
 import { countryOf } from '@/lib/money'
+import { accountTimeZone, dayRangeUtc, todayIn } from '@/lib/tz'
 
 // Runs once daily (see vercel.json). Marks sent invoices past due as
 // overdue, then for every account: emails a reminder for overdue invoices
@@ -83,6 +84,9 @@ export async function GET(request: NextRequest) {
   const results: Array<{ account: string; reminders: number; briefingSent: boolean }> = []
 
   for (const account of accounts ?? []) {
+    // "Jobs today" in the shop's own zone.
+    const tz = accountTimeZone(account)
+    const jobsDay = dayRangeUtc(todayIn(tz), tz)
     const [overdueInvoices, customerCount, jobsToday, owner] = await Promise.all([
       admin
         .from('invoices')
@@ -97,8 +101,8 @@ export async function GET(request: NextRequest) {
         .from('jobs')
         .select('id', { count: 'exact', head: true })
         .eq('account_id', account.id)
-        .gte('scheduled_date', `${todayStr}T00:00:00`)
-        .lt('scheduled_date', `${todayStr}T23:59:59`),
+        .gte('scheduled_date', jobsDay.start)
+        .lt('scheduled_date', jobsDay.end),
       admin
         .from('account_users')
         .select('user_id')

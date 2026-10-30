@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getCurrentAccount } from '@/lib/account'
+import { accountTimeZone, dayRangeUtc, todayIn } from '@/lib/tz'
 import { KpiTile, ICONS } from '@/components/dashboard/kpi-tile'
 import { RevenueChart, type Bucket } from '@/components/dashboard/revenue-chart'
 import { SetupChecklist, type SetupStep } from '@/components/dashboard/setup-checklist'
@@ -35,7 +36,9 @@ export default async function DashboardPage({
   const { supabase, account } = await getCurrentAccount()
 
   const today = new Date()
-  const todayStr = isoDate(today)
+  const tz = accountTimeZone(account)
+  const todayStr = todayIn(tz, today)
+  const { start: dayStart, end: dayEnd } = dayRangeUtc(todayStr, tz)
   const weekOut = new Date(today)
   weekOut.setDate(weekOut.getDate() + 7)
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
@@ -62,8 +65,8 @@ export default async function DashboardPage({
       supabase
         .from('jobs')
         .select('id', { count: 'exact', head: true })
-        .gte('scheduled_date', `${todayStr}T00:00:00`)
-        .lt('scheduled_date', `${todayStr}T23:59:59`),
+        .gte('scheduled_date', dayStart)
+        .lt('scheduled_date', dayEnd),
       supabase.from('agreements').select('id', { count: 'exact', head: true }).eq('status', 'active'),
       supabase
         .from('agreements')
@@ -168,7 +171,7 @@ export default async function DashboardPage({
             {hasCustomers ? 'Welcome back' : 'Welcome to Frostburn'}, {account.name}
           </h1>
           <p className="text-sm text-gray-500">
-            {today.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+            {today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: tz })}
           </p>
         </div>
         <Link

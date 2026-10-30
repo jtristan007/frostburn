@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { dayRangeUtc, todayIn } from '@/lib/tz'
 
 function isoDate(d: Date) {
   return d.toISOString().slice(0, 10)
@@ -19,9 +20,10 @@ function customerName(row: Named): string {
 // Everything the AI assistant is allowed to talk about. Built fresh from the
 // account's own real data on every ask -- the assistant is told explicitly
 // not to say anything that isn't in here.
-export async function buildSnapshot(supabase: SupabaseClient, accountName: string): Promise<string> {
+export async function buildSnapshot(supabase: SupabaseClient, accountName: string, tz: string): Promise<string> {
   const today = new Date()
-  const todayStr = isoDate(today)
+  const todayStr = todayIn(tz, today)
+  const { start: dayStart, end: dayEnd } = dayRangeUtc(todayStr, tz)
   const weekOut = new Date(today)
   weekOut.setDate(weekOut.getDate() + 7)
   const weekOutStr = isoDate(weekOut)
@@ -42,8 +44,8 @@ export async function buildSnapshot(supabase: SupabaseClient, accountName: strin
     supabase
       .from('jobs')
       .select('job_type, scheduled_date, status, customers(name)')
-      .gte('scheduled_date', `${todayStr}T00:00:00`)
-      .lt('scheduled_date', `${todayStr}T23:59:59`)
+      .gte('scheduled_date', dayStart)
+      .lt('scheduled_date', dayEnd)
       .order('scheduled_date', { ascending: true }),
     supabase
       .from('equipment')
@@ -80,7 +82,7 @@ export async function buildSnapshot(supabase: SupabaseClient, accountName: strin
   lines.push(`\nJobs scheduled today (${jobs.length}):`)
   if (jobs.length === 0) lines.push('- none')
   for (const j of jobs) {
-    const time = new Date(j.scheduled_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    const time = new Date(j.scheduled_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: tz })
     lines.push(`- ${time}: ${customerName(j)}, ${j.job_type}, status ${j.status}`)
   }
 
