@@ -34,8 +34,44 @@ async function getAccountId(): Promise<{ accountId: string; email: string | unde
   return { accountId, email: user.email }
 }
 
+const LIVE_SUBSCRIPTION_STATUSES = ['trialing', 'active', 'past_due', 'unpaid', 'incomplete']
+
+// True when this account already has a subscription, so the plan page
+// can't start a second one (e.g. the owner hits Back after Checkout). Checks
+// the database first, then Stripe itself by email, because the webhook that
+// records a new subscription can land a few seconds after Checkout returns.
+// Deliberately not exported: exports of a 'use server' file are callable
+// endpoints, and this takes an arbitrary account id and email.
+async function hasLiveSubscription(accountId: string, email: string | undefined): Promise<boolean> {
+  const supabase = await createClient()
+  const { data: account } = await supabase
+    .from('accounts')
+    .select('subscription_status')
+    .eq('id', accountId)
+    .maybeSingle()
+  if (account?.subscription_status && LIVE_SUBSCRIPTION_STATUSES.includes(account.subscription_status)) return true
+  if (!email) return false
+
+  try {
+    const customers = await stripe.customers.list({ email, limit: 10 })
+    for (const customer of customers.data) {
+      const subs = await stripe.subscriptions.list({ customer: customer.id, status: 'all', limit: 10 })
+      if (subs.data.some((s) => LIVE_SUBSCRIPTION_STATUSES.includes(s.status))) return true
+    }
+  } catch (err) {
+    // Don't block signup on a Stripe lookup failure; worst case is the
+    // duplicate this check exists to catch.
+    console.error('Checking for an existing subscription failed:', err)
+  }
+  return false
+}
+
 export async function createCheckoutSession(tier: Tier) {
   const { accountId, email } = await getAccountId()
+
+  if (await hasLiveSubscription(accountId, email)) {
+    redirect('/dashboard/settings/billing')
+  }
 
   let url: string
   try {
