@@ -24,11 +24,14 @@ export async function createAccountForNewUser(user: User): Promise<string> {
   if (existing) return existing.account_id
 
   // Invited teammates never go through the "new company" path -- they join
-  // the account they were invited into. Set on the auth user by
-  // inviteTeammate() (app/actions/team.ts) via inviteUserByEmail's `data`.
-  const invitedAccountId = user.user_metadata?.invited_account_id as string | undefined
+  // the account they were invited into. Read ONLY from app_metadata, which
+  // only the service role can write (set by inviteTeammate() in
+  // app/actions/team.ts). user_metadata is writable by the user themselves
+  // (signUp options.data, auth.updateUser), so trusting it let anyone sign
+  // up straight into any account as any role.
+  const invitedAccountId = user.app_metadata?.invited_account_id as string | undefined
   if (invitedAccountId) {
-    const role = (user.user_metadata?.invited_role as string) || 'technician'
+    const role = user.app_metadata?.invited_role === 'admin' ? 'admin' : 'technician'
     const { error } = await admin.from('account_users').insert({
       account_id: invitedAccountId,
       user_id: user.id,

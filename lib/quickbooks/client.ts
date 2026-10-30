@@ -21,8 +21,8 @@ function redirectUri() {
   return `${siteUrl}/api/quickbooks/callback`
 }
 
-// state carries the account_id through Intuit's redirect so the callback
-// knows which Frostburn account to attach the connection to.
+// state is an opaque CSRF nonce (see connectQuickBooks); the callback takes
+// the account from the session, not from state.
 export function getAuthorizeUrl(state: string): string {
   const params = new URLSearchParams({
     client_id: process.env.QUICKBOOKS_CLIENT_ID!,

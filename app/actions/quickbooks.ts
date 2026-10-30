@@ -1,13 +1,29 @@
 'use server'
 
+import { randomBytes } from 'node:crypto'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { getCurrentAccount } from '@/lib/account'
 import { getAuthorizeUrl, disconnectAccount, pushInvoice } from '@/lib/quickbooks/client'
 
+const QB_STATE_COOKIE = 'qb_oauth_state'
+
+// OAuth `state` is a random nonce also kept in an httpOnly cookie, and the
+// callback requires the two to match. It used to be the account id, which
+// is guessable, so a crafted callback link could attach an attacker's
+// QuickBooks company to a logged-in victim's account.
 export async function connectQuickBooks() {
-  const { account } = await getCurrentAccount()
-  redirect(getAuthorizeUrl(account.id))
+  await getCurrentAccount()
+  const state = randomBytes(24).toString('hex')
+  ;(await cookies()).set(QB_STATE_COOKIE, state, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/api/quickbooks',
+    maxAge: 600,
+  })
+  redirect(getAuthorizeUrl(state))
 }
 
 export async function disconnectQuickBooks() {
