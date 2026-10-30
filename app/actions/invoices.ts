@@ -7,27 +7,43 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { stripe } from '@/lib/stripe/client'
 import { getCurrentAccount } from '@/lib/account'
 import { sendInvoiceEmail } from '@/lib/resend/emails'
-import { countryOf, currencyFor } from '@/lib/money'
+import { countryOf, currencyFor, taxBreakdown, totalWithTax } from '@/lib/money'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
 type FormState = { error?: string } | undefined
 
+// Canadian shops' forms send `subtotal` + `tax_rate` (GST/HST) instead of a
+// single `total`; the total charged is computed here from those two, never
+// trusted from the browser. US forms send `total` only, and the tax columns
+// are left out of the write entirely so that path doesn't depend on
+// migration 0018.
 function readInvoiceFields(formData: FormData) {
-  return {
+  const base = {
     customer_id: formData.get('customer_id') as string,
     job_id: (formData.get('job_id') as string) || null,
     invoice_number: ((formData.get('invoice_number') as string) ?? '').trim(),
     status: formData.get('status') as string,
     issue_date: formData.get('issue_date') as string,
     due_date: (formData.get('due_date') as string) || null,
-    total: Number(formData.get('total')),
   }
+  if (formData.has('subtotal')) {
+    const subtotal = Number(formData.get('subtotal'))
+    const tax_rate = Number(formData.get('tax_rate') ?? 0)
+    return { ...base, subtotal, tax_rate, total: totalWithTax(subtotal, tax_rate) }
+  }
+  return { ...base, total: Number(formData.get('total')) }
 }
 
 function validateInvoice(fields: ReturnType<typeof readInvoiceFields>): string | null {
   if (!fields.customer_id) return 'Choose a customer for this invoice.'
   if (!fields.invoice_number) return 'Enter an invoice number.'
+  if ('subtotal' in fields) {
+    if (!Number.isFinite(fields.subtotal) || fields.subtotal < 0) return 'Enter an amount of $0 or more.'
+    if (!Number.isFinite(fields.tax_rate) || fields.tax_rate < 0 || fields.tax_rate > 25) {
+      return 'Enter a GST/HST rate between 0% and 25%.'
+    }
+  }
   if (!Number.isFinite(fields.total) || fields.total < 0) return 'Enter a total of $0 or more.'
   return null
 }
@@ -96,7 +112,9 @@ export async function getInvoiceByToken(token: string) {
   const admin = createAdminClient()
   const { data: invoice } = await admin
     .from('invoices')
-    .select('id, invoice_number, status, total, account_id, customer_id')
+    // '*' so subtotal/tax_rate come along once migration 0018 has run; the
+    // page only renders display-safe fields from it.
+    .select('*')
     .eq('pay_token', token)
     .maybeSingle()
 
@@ -119,6 +137,8 @@ export async function getInvoiceByToken(token: string) {
     customerName: customer?.name ?? null,
     chargesEnabled: !!account?.stripe_connect_charges_enabled,
     country: countryOf(account),
+    tax: taxBreakdown(invoice),
+    gstNumber: (account?.gst_number as string | null | undefined) ?? null,
   }
 }
 
@@ -198,7 +218,8 @@ export async function sendInvoiceToCustomer(id: string): Promise<{ error?: strin
 
   const { data: invoice } = await supabase
     .from('invoices')
-    .select('id, invoice_number, status, total, due_date, pay_token, customers(name, email)')
+    // '*' so subtotal/tax_rate come along once migration 0018 has run.
+    .select('*, customers(name, email)')
     .eq('id', id)
     .maybeSingle()
 
@@ -218,6 +239,8 @@ export async function sendInvoiceToCustomer(id: string): Promise<{ error?: strin
     dueDate: invoice.due_date,
     payUrl: account.stripe_connect_charges_enabled ? `${siteUrl}/pay/${invoice.pay_token}` : null,
     country: countryOf(account),
+    tax: taxBreakdown(invoice),
+    gstNumber: account.gst_number ?? null,
   })
   if (!ok) return { error: 'The email could not be sent. Please try again in a minute.' }
 

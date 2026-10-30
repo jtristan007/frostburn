@@ -5,6 +5,7 @@ import {
   syncConnectedAccountStatus,
 } from '@/lib/stripe-connect/client'
 import { connectStripePayments } from '@/app/actions/stripe-connect'
+import { saveGstNumber } from '@/app/actions/tax'
 import { COUNTRY_LABELS, countryOf, type Country } from '@/lib/money'
 
 const STATUS_COPY: Record<string, { label: string; tone: string }> = {
@@ -16,10 +17,10 @@ const STATUS_COPY: Record<string, { label: string; tone: string }> = {
 export default async function PaymentsSettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ onboarding?: string; error?: string }>
+  searchParams: Promise<{ onboarding?: string; error?: string; saved?: string }>
 }) {
   const { account } = await getCurrentAccount()
-  const { onboarding, error } = await searchParams
+  const { onboarding, error, saved } = await searchParams
 
   // Re-sync on every load while not yet fully active -- cheapest way to stay
   // eventually-consistent without a dedicated Connect webhook pipeline (see
@@ -118,6 +119,30 @@ export default async function PaymentsSettingsPage({
           </>
         )}
       </div>
+
+      {countryOf(account) === 'CA' && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 mt-4">
+          <p className="text-sm font-semibold text-navy mb-1">GST/HST number</p>
+          <p className="text-xs text-gray-400 mb-4">
+            Printed on your invoices. Leave blank if you&apos;re not registered for GST.
+          </p>
+          {saved === 'gst' && <p className="text-xs text-green-700 mb-3">Saved.</p>}
+          <form action={saveGstNumber} className="flex gap-2">
+            <input
+              name="gst_number"
+              defaultValue={account.gst_number ?? ''}
+              placeholder="123456789 RT0001"
+              className="flex-1 px-3.5 py-2.5 rounded-lg border border-gray-200 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-ice focus:border-transparent transition"
+            />
+            <button
+              type="submit"
+              className="text-sm font-semibold border border-gray-200 text-navy px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Save
+            </button>
+          </form>
+        </div>
+      )}
     </div>
   )
 }

@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import { getCurrentAccount } from '@/lib/account'
 import { updateInvoice, deleteInvoice } from '@/app/actions/invoices'
 import { CustomerSelect } from '@/components/dashboard/customer-select'
+import { InvoiceAmountFields } from '@/components/dashboard/invoice-amount-fields'
+import { countryOf } from '@/lib/money'
 
 const inputClass =
   'w-full px-3.5 py-2.5 rounded-lg border border-gray-200 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-ice focus:border-transparent transition'
@@ -10,7 +12,7 @@ const labelClass = 'block text-sm font-medium text-gray-700 mb-1.5'
 
 export default async function EditInvoicePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { supabase } = await getCurrentAccount()
+  const { supabase, account } = await getCurrentAccount()
   const [{ data: invoice }, { data: customers }, { data: jobs }] = await Promise.all([
     supabase.from('invoices').select('*').eq('id', id).maybeSingle(),
     supabase.from('customers').select('id, name').order('name'),
@@ -45,10 +47,14 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
             ))}
           </select>
         </div>
-        <div>
-          <label className={labelClass} htmlFor="total">Total ($)</label>
-          <input id="total" name="total" type="number" step="0.01" defaultValue={invoice.total} required className={inputClass} />
-        </div>
+        {/* An invoice entered before tax existed keeps its total as the
+            pre-tax amount at 0% until the owner changes it. */}
+        <InvoiceAmountFields
+          country={countryOf(account)}
+          defaultTotal={invoice.total}
+          defaultSubtotal={invoice.subtotal ?? null}
+          defaultTaxRate={invoice.subtotal != null ? Number(invoice.tax_rate ?? 0) : 0}
+        />
         <div>
           <label className={labelClass} htmlFor="issue_date">Issue date</label>
           <input id="issue_date" name="issue_date" type="date" defaultValue={invoice.issue_date} required className={inputClass} />

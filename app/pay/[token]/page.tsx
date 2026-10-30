@@ -16,7 +16,7 @@ export default async function PayInvoicePage({
   const result = await getInvoiceByToken(token)
   if (!result) notFound()
 
-  const { invoice, companyName, customerName, chargesEnabled, country } = result
+  const { invoice, companyName, customerName, chargesEnabled, country, tax, gstNumber } = result
   // Confirm with Stripe rather than trusting ?paid=1 from the redirect.
   const isPaid = invoice.status === 'paid' || (await reconcileInvoicePayment(invoice.id))
   const processing = paid === '1' && !isPaid
@@ -37,10 +37,23 @@ export default async function PayInvoicePage({
             {customerName ? ` — ${customerName}` : ''}
           </h1>
 
+          {tax && (
+            <div className="border-t border-gray-100 mt-4 pt-4 space-y-1 text-sm text-gray-500">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>{formatMoney(tax.subtotal, country)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>{tax.label}</span>
+                <span>{formatMoney(tax.tax, country)}</span>
+              </div>
+            </div>
+          )}
           <div className="flex justify-between text-base font-semibold border-t border-gray-100 mt-4 pt-4">
             <span className="text-navy">Total due</span>
             <span className="text-navy">{formatMoney(Number(invoice.total), country)}</span>
           </div>
+          {gstNumber && <p className="mt-2 text-xs text-gray-400">GST/HST No. {gstNumber}</p>}
 
           {processing ? (
             <div className="mt-6 bg-ice/10 border border-ice/30 rounded-xl px-4 py-3 text-sm text-navy font-medium">
