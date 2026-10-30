@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import { getCurrentAccount } from '@/lib/account'
+import { accountTimeZone, utcToWallTime } from '@/lib/tz'
 import { JobsView } from '@/components/dashboard/jobs-view'
 
 export default async function JobsPage() {
-  const { supabase } = await getCurrentAccount()
+  const { supabase, account } = await getCurrentAccount()
+  const tz = accountTimeZone(account)
   const [{ data: jobs }, { data: technicians }] = await Promise.all([
     supabase
       .from('jobs')
@@ -18,6 +20,9 @@ export default async function JobsPage() {
     id: j.id,
     job_type: j.job_type,
     scheduled_date: j.scheduled_date,
+    // Wall-clock time in the shop's zone, so list and calendar show the
+    // same time on the server and in any browser.
+    localWall: utcToWallTime(j.scheduled_date, tz),
     status: j.status,
     customerName: (j.customers as unknown as { name: string } | null)?.name ?? '—',
     technicianName: j.assigned_technician_id ? techNameById.get(j.assigned_technician_id) ?? null : null,

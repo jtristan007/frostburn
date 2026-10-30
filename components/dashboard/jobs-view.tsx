@@ -15,9 +15,17 @@ type Job = {
   id: string
   job_type: string
   scheduled_date: string
+  localWall: string
   status: string
   customerName: string
   technicianName: string | null
+}
+
+// localWall is already in the shop's zone; format it as-is (UTC = no shift).
+function formatWall(wall: string) {
+  const d = new Date(`${wall}:00Z`)
+  if (Number.isNaN(d.getTime())) return '—'
+  return d.toLocaleString('en-US', { timeZone: 'UTC', dateStyle: 'medium', timeStyle: 'short' })
 }
 
 export function JobsView({ jobs }: { jobs: Job[] }) {
@@ -59,7 +67,7 @@ export function JobsView({ jobs }: { jobs: Job[] }) {
                     <td className="px-6 py-3 text-gray-400 capitalize">{j.job_type}</td>
                     <td className="px-6 py-3 text-gray-400">{j.technicianName ?? 'Unassigned'}</td>
                     <td className="px-6 py-3 text-gray-400">
-                      {new Date(j.scheduled_date).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                      {formatWall(j.localWall)}
                     </td>
                     <td className="px-6 py-3">
                       <span className={`text-xs font-medium px-2 py-1 rounded-full capitalize ${STATUS_COLORS[j.status] ?? ''}`}>

@@ -7,6 +7,7 @@ type Job = {
   id: string
   job_type: string
   scheduled_date: string
+  localWall: string
   status: string
   customerName: string
   technicianName: string | null
@@ -29,6 +30,10 @@ function sameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 }
 
+function ymd(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 export function JobsCalendar({ jobs }: { jobs: Job[] }) {
   const [cursor, setCursor] = useState(() => {
     const d = new Date()
@@ -45,8 +50,9 @@ export function JobsCalendar({ jobs }: { jobs: Job[] }) {
       const date = new Date(gridStart)
       date.setDate(gridStart.getDate() + i)
       const dayJobs = jobs
-        .filter((j) => sameDay(new Date(j.scheduled_date), date))
-        .sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date))
+        // Day of the job in the shop's zone, not the viewer's browser.
+        .filter((j) => j.localWall.slice(0, 10) === ymd(date))
+        .sort((a, b) => a.localWall.localeCompare(b.localWall))
       return { date, inMonth: date.getMonth() === cursor.getMonth(), jobs: dayJobs }
     })
   }, [cursor, jobs])

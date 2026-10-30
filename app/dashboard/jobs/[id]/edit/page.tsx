@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getCurrentAccount } from '@/lib/account'
+import { BrowserTimeZoneInput } from '@/components/dashboard/browser-timezone-input'
+import { accountTimeZone, utcToWallTime } from '@/lib/tz'
 import { updateJob, deleteJob } from '@/app/actions/jobs'
 import { CustomerSelect } from '@/components/dashboard/customer-select'
 
@@ -9,7 +11,7 @@ const labelClass = 'block text-sm font-medium text-gray-700 mb-1.5'
 
 export default async function EditJobPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { supabase } = await getCurrentAccount()
+  const { supabase, account } = await getCurrentAccount()
   const [{ data: job }, { data: customers }, { data: equipment }, { data: technicians }, { data: photos }, { data: agreements }] =
     await Promise.all([
       supabase.from('jobs').select('*').eq('id', id).maybeSingle(),
@@ -28,12 +30,13 @@ export default async function EditJobPage({ params }: { params: Promise<{ id: st
   const beforePhotos = (photos ?? []).filter((p) => p.kind === 'before')
   const afterPhotos = (photos ?? []).filter((p) => p.kind === 'after')
 
-  const scheduledLocal = job.scheduled_date ? job.scheduled_date.slice(0, 16) : ''
+  const scheduledLocal = job.scheduled_date ? utcToWallTime(job.scheduled_date, accountTimeZone(account)) : ''
 
   return (
     <div className="max-w-lg">
       <h1 className="text-2xl font-bold text-navy mb-6">Edit Job</h1>
       <form action={updateJob.bind(null, id)} className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+        <BrowserTimeZoneInput />
         <div>
           <label className={labelClass} htmlFor="customer_id">Customer</label>
           <CustomerSelect customers={customers ?? []} defaultValue={job.customer_id} />
