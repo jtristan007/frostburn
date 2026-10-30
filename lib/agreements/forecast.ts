@@ -33,6 +33,7 @@ export function forecastAgreementVisits(
   today: Date = new Date()
 ): MonthBucket[] {
   const start = new Date(today.getFullYear(), today.getMonth(), 1)
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate())
   const horizonEnd = new Date(start.getFullYear(), start.getMonth() + horizonMonths, 1)
 
   const buckets = new Map<string, number>()
@@ -50,8 +51,10 @@ export function forecastAgreementVisits(
     // A stale next_service_date shouldn't dump a backlog of "missed"
     // visits into the current month -- fast-forward to the next one on
     // or after today first.
+    // Compared against the start of today: `today` carries the current
+    // time, so a visit due today used to count as past and get skipped.
     let guard = 0
-    while (cursor < today && guard < 10_000) {
+    while (cursor < startOfToday && guard < 10_000) {
       cursor = addDays(cursor, intervalDays)
       guard++
     }

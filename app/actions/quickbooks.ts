@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { getCurrentAccount } from '@/lib/account'
 import { getAuthorizeUrl, disconnectAccount, pushInvoice } from '@/lib/quickbooks/client'
+import { taxBreakdown } from '@/lib/money'
 
 export async function connectQuickBooks() {
   const { account } = await getCurrentAccount()
@@ -21,12 +22,22 @@ export async function sendInvoiceToQuickBooks(invoiceId: string): Promise<{ erro
 
   const { data: invoice } = await supabase
     .from('invoices')
-    .select('id, invoice_number, total, qb_invoice_id, customers(name)')
+    .select('*, customers(name)')
     .eq('id', invoiceId)
     .maybeSingle()
 
   if (!invoice) return { error: 'Invoice not found.' }
   if (invoice.qb_invoice_id) return { error: 'Already sent to QuickBooks.' }
+  // The QuickBooks push sends a single sales line for the whole total, so
+  // GST would be booked as sales income instead of tax collected. Until
+  // the push maps GST to the company's QuickBooks tax codes, refuse rather
+  // than put wrong numbers in the owner's books.
+  if (taxBreakdown(invoice)) {
+    return {
+      error:
+        'Invoices with GST/HST can’t be sent to QuickBooks yet. Enter this one in QuickBooks directly so the tax is recorded correctly.',
+    }
+  }
 
   const customerName = (invoice.customers as unknown as { name: string } | null)?.name
   if (!customerName) return { error: 'This invoice has no customer to bill.' }
