@@ -20,8 +20,15 @@ const CATEGORY_LABELS: Record<string, string> = {
   emergency: 'Emergency',
 }
 
-export function PricingBookCatalog({ items }: { items: Item[] }) {
+export function PricingBookCatalog({
+  items,
+  customers,
+}: {
+  items: Item[]
+  customers: { id: string; name: string }[]
+}) {
   const [query, setQuery] = useState('')
+  const [customerId, setCustomerId] = useState('')
   const [cart, setCart] = useState<Record<string, number>>({})
   const [pending, startTransition] = useTransition()
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -56,7 +63,7 @@ export function PricingBookCatalog({ items }: { items: Item[] }) {
 
   function createQuote() {
     startTransition(async () => {
-      await createQuoteFromCart(null, cartLines)
+      await createQuoteFromCart(customerId || null, cartLines)
     })
   }
 
@@ -173,6 +180,22 @@ export function PricingBookCatalog({ items }: { items: Item[] }) {
       <div>
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sticky top-8">
           <h3 className="text-sm font-semibold text-navy mb-4">Quote builder</h3>
+          <label htmlFor="quote_customer" className="block text-xs font-medium text-gray-500 mb-1.5">
+            For customer
+          </label>
+          <select
+            id="quote_customer"
+            value={customerId}
+            onChange={(e) => setCustomerId(e.target.value)}
+            className="w-full mb-4 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-ice"
+          >
+            <option value="">Choose a customer…</option>
+            {customers.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
           {cartLines.length === 0 ? (
             <p className="text-sm text-gray-400">Add items to build a quote.</p>
           ) : (
@@ -193,7 +216,7 @@ export function PricingBookCatalog({ items }: { items: Item[] }) {
           </div>
           <button
             type="button"
-            disabled={cartLines.length === 0 || pending}
+            disabled={cartLines.length === 0 || !customerId || pending}
             onClick={createQuote}
             className="w-full py-2.5 rounded-lg bg-ice text-navy text-sm font-semibold hover:bg-ice-dim disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
