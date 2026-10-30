@@ -7,10 +7,20 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 export type CartLine = { pricing_book_item_id: string; description: string; unit_price: number; quantity: number }
 
+// Only a customer this account can see (RLS) -- inserts only check the
+// quote's own account_id, so an unchecked id could point at another
+// tenant's customer and show their name on the public quote page.
+async function ownCustomerId(supabase: Awaited<ReturnType<typeof createClient>>, customerId: string | null) {
+  if (!customerId) return null
+  const { data } = await supabase.from('customers').select('id').eq('id', customerId).maybeSingle()
+  return data?.id ?? null
+}
+
 export async function createQuoteFromCart(customerId: string | null, lines: CartLine[]) {
   if (lines.length === 0) throw new Error('Add at least one item before creating a quote.')
 
   const supabase = await createClient()
+  customerId = await ownCustomerId(supabase, customerId)
   const total = lines.reduce((sum, l) => sum + l.unit_price * l.quantity, 0)
 
   const { data: quote, error } = await supabase
@@ -33,6 +43,17 @@ export async function createQuoteFromCart(customerId: string | null, lines: Cart
   if (itemsError) throw new Error(itemsError.message)
 
   redirect(`/dashboard/quotes/${quote.id}`)
+}
+
+// Sets (or changes) who a quote is for, while it's still a draft.
+export async function setQuoteCustomer(id: string, formData: FormData) {
+  const supabase = await createClient()
+  const customerId = await ownCustomerId(supabase, (formData.get('customer_id') as string) || null)
+  if (customerId) {
+    await supabase.from('quotes').update({ customer_id: customerId }).eq('id', id).eq('status', 'draft')
+  }
+  revalidatePath(`/dashboard/quotes/${id}`)
+  revalidatePath('/dashboard/quotes')
 }
 
 export async function sendQuote(id: string) {
