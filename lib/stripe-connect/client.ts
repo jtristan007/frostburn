@@ -1,5 +1,6 @@
 import { stripe } from '@/lib/stripe/client'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { currencyFor, type Country } from '@/lib/money'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
@@ -26,7 +27,8 @@ type ConnectStatus = 'not_connected' | 'onboarding' | 'active'
 export async function ensureConnectedAccount(
   accountId: string,
   companyName: string,
-  contactEmail: string | undefined
+  contactEmail: string | undefined,
+  country: Country
 ): Promise<string> {
   const admin = createAdminClient()
   const { data: existing } = await admin
@@ -44,10 +46,10 @@ export async function ensureConnectedAccount(
     // Only the country needs to be seeded up front -- Stripe's own
     // Account Link onboarding flow (created right after this) collects
     // the rest of identity (entity type, business details, individual
-    // info) incrementally. Defaults to 'us' to match the USD currency
-    // already hardcoded across billing/invoicing; revisit if Frostburn's
-    // actual HVAC customers are Canadian instead.
-    identity: { country: 'us' },
+    // info) incrementally. The country is the shop's own (US or Canada,
+    // chosen on the Payments page) and can't be changed once the account
+    // exists; invoices are charged in that country's currency.
+    identity: { country: country === 'CA' ? 'ca' : 'us' },
     configuration: {
       merchant: {
         capabilities: {
@@ -56,7 +58,7 @@ export async function ensureConnectedAccount(
       },
     },
     defaults: {
-      currency: 'usd',
+      currency: currencyFor(country),
       responsibilities: {
         fees_collector: 'application',
         losses_collector: 'application',

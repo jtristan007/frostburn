@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { stripe } from '@/lib/stripe/client'
 import { getCurrentAccount } from '@/lib/account'
 import { sendInvoiceEmail } from '@/lib/resend/emails'
+import { countryOf, currencyFor } from '@/lib/money'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
@@ -104,13 +105,21 @@ export async function getInvoiceByToken(token: string) {
   const [{ data: account }, { data: customer }] = await Promise.all([
     admin
       .from('accounts')
-      .select('name, stripe_connect_account_id, stripe_connect_charges_enabled')
+      // '*' rather than a column list so this keeps working if the code
+      // ships before migration 0017 adds `country` (countryOf -> US).
+      .select('*')
       .eq('id', invoice.account_id)
       .maybeSingle(),
     admin.from('customers').select('name').eq('id', invoice.customer_id).maybeSingle(),
   ])
 
-  return { invoice, companyName: account?.name ?? null, customerName: customer?.name ?? null, chargesEnabled: !!account?.stripe_connect_charges_enabled }
+  return {
+    invoice,
+    companyName: account?.name ?? null,
+    customerName: customer?.name ?? null,
+    chargesEnabled: !!account?.stripe_connect_charges_enabled,
+    country: countryOf(account),
+  }
 }
 
 // Creates a Checkout Session as a direct charge on the HVAC company's own
@@ -134,7 +143,7 @@ export async function payInvoice(token: string) {
 
   const { data: account } = await admin
     .from('accounts')
-    .select('stripe_connect_account_id, stripe_connect_charges_enabled')
+    .select('*')
     .eq('id', invoice.account_id)
     .maybeSingle()
 
@@ -155,7 +164,7 @@ export async function payInvoice(token: string) {
         line_items: [
           {
             price_data: {
-              currency: 'usd',
+              currency: currencyFor(countryOf(account)),
               unit_amount: amount,
               product_data: { name: `Invoice ${invoice.invoice_number}` },
             },
@@ -208,6 +217,7 @@ export async function sendInvoiceToCustomer(id: string): Promise<{ error?: strin
     total: Number(invoice.total),
     dueDate: invoice.due_date,
     payUrl: account.stripe_connect_charges_enabled ? `${siteUrl}/pay/${invoice.pay_token}` : null,
+    country: countryOf(account),
   })
   if (!ok) return { error: 'The email could not be sent. Please try again in a minute.' }
 

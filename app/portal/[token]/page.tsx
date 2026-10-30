@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getPortalByToken } from '@/app/actions/portal'
+import { formatMoney } from '@/lib/money'
 import { Logo } from '@/components/logo'
 
 const INVOICE_STATUS_STYLE: Record<string, string> = {
@@ -22,7 +23,7 @@ export default async function CustomerPortalPage({ params }: { params: Promise<{
   const result = await getPortalByToken(token)
   if (!result) notFound()
 
-  const { customer, companyName, chargesEnabled, invoices, quotes, equipment } = result
+  const { customer, companyName, chargesEnabled, country, invoices, quotes, equipment } = result
   const outstanding = invoices
     .filter((inv) => inv.status === 'sent' || inv.status === 'overdue')
     .reduce((sum, inv) => sum + Number(inv.total), 0)
@@ -43,7 +44,7 @@ export default async function CustomerPortalPage({ params }: { params: Promise<{
           {outstanding > 0 ? (
             <div className="flex justify-between items-center bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
               <span className="text-sm text-amber-700 font-medium">Outstanding balance</span>
-              <span className="text-lg font-bold text-amber-700">${outstanding.toFixed(2)}</span>
+              <span className="text-lg font-bold text-amber-700">{formatMoney(outstanding, country)}</span>
             </div>
           ) : (
             <div className="bg-green-50 border border-green-100 rounded-xl px-4 py-3 text-sm text-green-700 font-medium">
@@ -76,7 +77,7 @@ export default async function CustomerPortalPage({ params }: { params: Promise<{
                         {inv.status}
                       </span>
                       <span className="text-sm font-semibold text-navy w-16 text-right">
-                        ${Number(inv.total).toFixed(2)}
+                        {formatMoney(Number(inv.total), country)}
                       </span>
                       {canPay && (
                         <Link
@@ -114,7 +115,7 @@ export default async function CustomerPortalPage({ params }: { params: Promise<{
                       {q.status}
                     </span>
                     <span className="text-sm font-semibold text-navy w-16 text-right">
-                      ${Number(q.total).toFixed(2)}
+                      {formatMoney(Number(q.total), country)}
                     </span>
                   </div>
                 </Link>

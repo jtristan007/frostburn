@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCurrentAccount } from '@/lib/account'
+import { countryOf, formatMoney } from '@/lib/money'
 import { PrintButton } from '@/components/dashboard/print-button'
 import { SendToQuickBooksButton } from '@/components/dashboard/send-to-quickbooks-button'
 import { SendInvoiceButton } from '@/components/dashboard/send-invoice-button'
@@ -125,7 +126,7 @@ export default async function InvoiceViewPage({ params }: { params: Promise<{ id
         <div className="border-t border-gray-100 pt-6 flex justify-end">
           <div className="text-right">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Total due</p>
-            <p className="text-3xl font-bold text-navy">${Number(invoice.total).toFixed(2)}</p>
+            <p className="text-3xl font-bold text-navy">{formatMoney(Number(invoice.total), countryOf(account))}</p>
             {payUrl && (
               <>
                 <a

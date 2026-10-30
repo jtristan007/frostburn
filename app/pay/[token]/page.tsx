@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getInvoiceByToken, payInvoice } from '@/app/actions/invoices'
+import { formatMoney } from '@/lib/money'
 import { Logo } from '@/components/logo'
 import { reconcileInvoicePayment } from '@/lib/stripe-connect/reconcile'
 
@@ -15,7 +16,7 @@ export default async function PayInvoicePage({
   const result = await getInvoiceByToken(token)
   if (!result) notFound()
 
-  const { invoice, companyName, customerName, chargesEnabled } = result
+  const { invoice, companyName, customerName, chargesEnabled, country } = result
   // Confirm with Stripe rather than trusting ?paid=1 from the redirect.
   const isPaid = invoice.status === 'paid' || (await reconcileInvoicePayment(invoice.id))
   const processing = paid === '1' && !isPaid
@@ -38,7 +39,7 @@ export default async function PayInvoicePage({
 
           <div className="flex justify-between text-base font-semibold border-t border-gray-100 mt-4 pt-4">
             <span className="text-navy">Total due</span>
-            <span className="text-navy">${Number(invoice.total).toFixed(2)}</span>
+            <span className="text-navy">{formatMoney(Number(invoice.total), country)}</span>
           </div>
 
           {processing ? (

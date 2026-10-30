@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { countryOf } from '@/lib/money'
 
 // Public route (/portal/[token]) has no session, so -- same as
 // getQuoteByToken and getInvoiceByToken -- this fetches via the
@@ -19,7 +20,8 @@ export async function getPortalByToken(token: string) {
   const [{ data: account }, { data: invoices }, { data: quotes }, { data: equipment }] = await Promise.all([
     admin
       .from('accounts')
-      .select('name, stripe_connect_charges_enabled')
+      // '*' so this keeps working before migration 0017 adds `country`.
+      .select('*')
       .eq('id', customer.account_id)
       .maybeSingle(),
     admin
@@ -42,6 +44,7 @@ export async function getPortalByToken(token: string) {
     customer,
     companyName: account?.name ?? null,
     chargesEnabled: !!account?.stripe_connect_charges_enabled,
+    country: countryOf(account),
     invoices: invoices ?? [],
     quotes: quotes ?? [],
     equipment: equipment ?? [],
