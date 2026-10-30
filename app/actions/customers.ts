@@ -16,7 +16,7 @@ export async function createCustomer(formData: FormData) {
       email,
       phone: (formData.get('phone') as string) || null,
       address: (formData.get('address') as string) || null,
-      city: (formData.get('city') as string) || 'Vancouver',
+      city: (formData.get('city') as string)?.trim() || null,
       notes: (formData.get('notes') as string) || null,
     })
     .select('id')
@@ -24,7 +24,9 @@ export async function createCustomer(formData: FormData) {
 
   if (error || !data) throw new Error(error?.message ?? 'Could not create customer.')
 
-  if (email) {
+  // Only when the owner ticks "Send a welcome email" on the form -- adding a
+  // customer to try the product out should never email them by surprise.
+  if (email && formData.get('send_welcome') === 'on') {
     const { data: account } = await supabase.from('accounts').select('name').single()
     if (account) {
       await sendWelcomeEmail({
@@ -47,7 +49,7 @@ export async function updateCustomer(id: string, formData: FormData) {
       email: (formData.get('email') as string) || null,
       phone: (formData.get('phone') as string) || null,
       address: (formData.get('address') as string) || null,
-      city: (formData.get('city') as string) || 'Vancouver',
+      city: (formData.get('city') as string)?.trim() || null,
       notes: (formData.get('notes') as string) || null,
     })
     .eq('id', id)
@@ -67,11 +69,9 @@ type ImportRow = Partial<Record<'name' | 'email' | 'phone' | 'address' | 'city' 
 // rather than rejecting the whole import; the wizard already warns about
 // these before submit, this is the server-side backstop.
 //
-// Deliberately does NOT default a missing city to 'Vancouver' the way the
-// single-customer form does -- that default makes sense for a shop
-// manually adding one local customer, but silently stamping it onto every
-// row of an unrelated CSV would just be wrong data for anyone whose
-// export didn't include a city column.
+// A missing city is stored as null, same as the single-customer form --
+// city is explicitly set on every row so the column's legacy 'Vancouver'
+// default never applies.
 export async function bulkImportCustomers(
   _prevState: ImportResult | undefined,
   formData: FormData

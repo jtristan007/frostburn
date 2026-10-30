@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   const type = searchParams.get('type') as EmailOtpType | null
   const nextParam = searchParams.get('next') ?? '/dashboard'
   // Only same-site paths -- never an absolute or protocol-relative URL.
-  const next = nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/dashboard'
+  const next = /^\/(?![\/\\])/.test(nextParam) ? nextParam : '/dashboard'
 
   if (tokenHash && type) {
     const supabase = await createClient()

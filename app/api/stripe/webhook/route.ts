@@ -9,6 +9,14 @@ import { tierForPriceId } from '@/lib/stripe/plans'
 // needs the RAW request body for signature verification. request.text()
 // already gives the raw payload in the App Router -- there's no
 // Pages-Router-style `bodyParser: false` config to port in here.
+// A failed DB write must not be acknowledged: a 2xx tells Stripe the event
+// was handled and it never retries, which can leave a paid trial or a paid
+// invoice unrecorded. Throwing makes this handler return 500 so Stripe
+// redelivers the event (every write below is idempotent).
+function check(result: { error: { message: string } | null }, what: string) {
+  if (result.error) throw new Error(`Stripe webhook: ${what} failed: ${result.error.message}`)
+}
+
 export async function POST(request: Request) {
   const body = await request.text()
   const signature = request.headers.get('stripe-signature')
@@ -63,15 +71,18 @@ export async function POST(request: Request) {
         const invoiceId = session.metadata?.invoice_id
         if (!invoiceId) break
 
-        await admin
-          .from('invoices')
-          .update({
-            status: 'paid',
-            paid_at: new Date().toISOString(),
-            stripe_payment_intent_id:
-              typeof session.payment_intent === 'string' ? session.payment_intent : null,
-          })
-          .eq('id', invoiceId)
+        check(
+          await admin
+            .from('invoices')
+            .update({
+              status: 'paid',
+              paid_at: new Date().toISOString(),
+              stripe_payment_intent_id:
+                typeof session.payment_intent === 'string' ? session.payment_intent : null,
+            })
+            .eq('id', invoiceId),
+          'marking invoice paid'
+        )
         break
       }
 
@@ -82,15 +93,18 @@ export async function POST(request: Request) {
       const priceId = subscription.items.data[0]?.price.id
       const tier = priceId ? tierForPriceId(priceId) : null
 
-      await admin
-        .from('accounts')
-        .update({
-          stripe_customer_id: session.customer as string,
-          stripe_subscription_id: subscription.id,
-          tier,
-          subscription_status: subscription.status,
-        })
-        .eq('id', accountId)
+      check(
+        await admin
+          .from('accounts')
+          .update({
+            stripe_customer_id: session.customer as string,
+            stripe_subscription_id: subscription.id,
+            tier,
+            subscription_status: subscription.status,
+          })
+          .eq('id', accountId),
+        'recording subscription checkout'
+      )
       break
     }
 
@@ -99,20 +113,26 @@ export async function POST(request: Request) {
       const priceId = subscription.items.data[0]?.price.id
       const tier = priceId ? tierForPriceId(priceId) : null
 
-      await admin
-        .from('accounts')
-        .update({ tier, subscription_status: subscription.status })
-        .eq('stripe_customer_id', subscription.customer as string)
+      check(
+        await admin
+          .from('accounts')
+          .update({ tier, subscription_status: subscription.status })
+          .eq('stripe_customer_id', subscription.customer as string),
+        'updating subscription'
+      )
       break
     }
 
     case 'customer.subscription.deleted': {
       const subscription = event.data.object as Stripe.Subscription
 
-      await admin
-        .from('accounts')
-        .update({ subscription_status: 'canceled' })
-        .eq('stripe_customer_id', subscription.customer as string)
+      check(
+        await admin
+          .from('accounts')
+          .update({ subscription_status: 'canceled' })
+          .eq('stripe_customer_id', subscription.customer as string),
+        'canceling subscription'
+      )
       break
     }
 
@@ -121,10 +141,13 @@ export async function POST(request: Request) {
       const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id
       if (!customerId) break
 
-      await admin
-        .from('accounts')
-        .update({ subscription_status: 'past_due' })
-        .eq('stripe_customer_id', customerId)
+      check(
+        await admin
+          .from('accounts')
+          .update({ subscription_status: 'past_due' })
+          .eq('stripe_customer_id', customerId),
+        'marking subscription past_due'
+      )
       break
     }
   }

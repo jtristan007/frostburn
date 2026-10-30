@@ -4,6 +4,12 @@ import { resend, EMAIL_FROM } from '@/lib/resend/client'
 // not throw) -- a failed notification email should never break the
 // customer/invoice flow that triggered it.
 
+// Values interpolated into HTML come from user-entered data (company and
+// customer names), so escape them.
+function esc(s: string) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
 function wrapper(bodyHtml: string) {
   return `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #0f172a;">
@@ -31,14 +37,14 @@ export async function sendInvoiceReminderEmail(params: {
     await resend.emails.send({
       from: EMAIL_FROM,
       to,
-      subject: `Reminder: Invoice ${invoiceNumber} from ${companyName} is overdue`,
+      subject: `Reminder: Invoice ${invoiceNumber} from ${companyName} is overdue`.replace(/[\r\n]+/g, ' '),
       html: wrapper(`
-        <p>Hi ${customerName},</p>
-        <p>This is a friendly reminder that invoice <strong>${invoiceNumber}</strong> from <strong>${companyName}</strong> is now overdue.</p>
+        <p>Hi ${esc(customerName)},</p>
+        <p>This is a friendly reminder that invoice <strong>${esc(invoiceNumber)}</strong> from <strong>${esc(companyName)}</strong> is now overdue.</p>
         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin:16px 0;">
           <div style="font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.04em;">Amount due</div>
           <div style="font-size:24px; font-weight:700;">$${total.toFixed(2)}</div>
-          ${dueDate ? `<div style="font-size:13px; color:#64748b; margin-top:4px;">Was due ${dueDate}</div>` : ''}
+          ${dueDate ? `<div style="font-size:13px; color:#64748b; margin-top:4px;">Was due ${esc(dueDate)}</div>` : ''}
         </div>
         <p>If you've already sent payment, thank you -- please disregard this message.</p>
       `),
@@ -58,11 +64,11 @@ export async function sendWelcomeEmail(params: {
     await resend.emails.send({
       from: EMAIL_FROM,
       to,
-      subject: `Welcome to ${companyName}`,
+      subject: `Welcome to ${companyName}`.replace(/[\r\n]+/g, ' '),
       html: wrapper(`
-        <p>Hi ${customerName},</p>
-        <p>You're now set up as a customer of <strong>${companyName}</strong>. We'll keep your service history, equipment, and invoices organized here going forward.</p>
-        <p>If you have any questions, just reach out to ${companyName} directly.</p>
+        <p>Hi ${esc(customerName)},</p>
+        <p>You're now set up as a customer of <strong>${esc(companyName)}</strong>. We'll keep your service history, equipment, and invoices organized here going forward.</p>
+        <p>If you have any questions, just reach out to ${esc(companyName)} directly.</p>
       `),
     })
   } catch (err) {
@@ -86,7 +92,7 @@ export async function sendMorningBriefingEmail(params: {
       subject: `Morning briefing for ${companyName} -- ${new Date().toLocaleDateString()}`,
       html: wrapper(`
         <p>Good morning,</p>
-        <p>Here's where things stand for <strong>${companyName}</strong> today${overdueCount > 0 ? `, including ${overdueCount} overdue invoice reminder${overdueCount === 1 ? '' : 's'} sent automatically overnight` : ''}.</p>
+        <p>Here's where things stand for <strong>${esc(companyName)}</strong> today${overdueCount > 0 ? `, including ${overdueCount} overdue invoice reminder${overdueCount === 1 ? '' : 's'} sent automatically overnight` : ''}.</p>
         <table style="width:100%; border-collapse: collapse; margin: 16px 0;">
           <tr>
             <td style="padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px 0 0 10px;">
@@ -108,12 +114,6 @@ export async function sendMorningBriefingEmail(params: {
   } catch (err) {
     console.error('sendMorningBriefingEmail failed:', err)
   }
-}
-
-// Values interpolated into HTML come from user-entered data (company and
-// customer names), so escape them.
-function esc(s: string) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
 // Unlike the notification helpers above, this one reports failure: the

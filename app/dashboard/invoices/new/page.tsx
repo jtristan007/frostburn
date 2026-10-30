@@ -69,11 +69,12 @@ export default async function NewInvoicePage() {
         <div>
           <label className={labelClass} htmlFor="status">Status</label>
           <select id="status" name="status" defaultValue="draft" className={inputClass}>
-            <option value="draft">Draft</option>
-            <option value="sent">Sent</option>
-            <option value="paid">Paid</option>
-            <option value="overdue">Overdue</option>
+            <option value="draft">Draft — I&apos;ll send it next</option>
+            <option value="paid">Already paid (cash or check)</option>
           </select>
+          <p className="mt-1.5 text-xs text-gray-400">
+            You can email it to your customer from the next screen.
+          </p>
         </div>
         <button
           type="submit"
