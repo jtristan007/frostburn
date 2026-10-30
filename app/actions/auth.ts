@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
 export type AuthState =
-  | { error: string }
+  | { error: string; existingAccount?: boolean }
   | { message: string }
   | undefined
 
@@ -29,7 +29,7 @@ export async function signup(state: AuthState, formData: FormData): Promise<Auth
   const companyName = (formData.get('company_name') as string)?.trim()
   if (!companyName) return { error: 'Company name is required.' }
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email: formData.get('email') as string,
     password: formData.get('password') as string,
     options: {
@@ -39,6 +39,17 @@ export async function signup(state: AuthState, formData: FormData): Promise<Auth
   })
 
   if (error) return { error: error.message }
+
+  // With email confirmation on, Supabase answers a signup for an email that
+  // already has an account with a "success" and a placeholder user that has
+  // no identities -- and sends no email. Without this check the owner sees
+  // "check your email" and waits for a message that never comes.
+  if (data.user && data.user.identities?.length === 0) {
+    return {
+      error: 'An account with this email already exists. Log in instead, or reset your password if you’ve forgotten it.',
+      existingAccount: true,
+    }
+  }
 
   return { message: 'Check your email to confirm your account, then pick a plan to get started.' }
 }

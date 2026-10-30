@@ -80,6 +80,16 @@ export default function SignupPage() {
           {state && 'error' in state && (
             <p className="text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3.5 py-2.5">
               {state.error}
+              {state.existingAccount && (
+                <span className="mt-2 flex gap-4">
+                  <Link href="/login" className="font-semibold text-ice hover:text-ice-dim">
+                    Log in
+                  </Link>
+                  <Link href="/forgot-password" className="font-semibold text-ice hover:text-ice-dim">
+                    Reset password
+                  </Link>
+                </span>
+              )}
             </p>
           )}
 
