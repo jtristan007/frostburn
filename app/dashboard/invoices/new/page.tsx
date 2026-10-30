@@ -1,3 +1,4 @@
+import { ActionForm } from '@/components/dashboard/action-form'
 import Link from 'next/link'
 import { getCurrentAccount } from '@/lib/account'
 import { createInvoice } from '@/app/actions/invoices'
@@ -48,7 +49,7 @@ export default async function NewInvoicePage() {
   return (
     <div className="max-w-lg">
       <h1 className="text-2xl font-bold text-navy mb-6">New Invoice</h1>
-      <form action={createInvoice} className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+      <ActionForm action={createInvoice} className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
         <div>
           <label className={labelClass} htmlFor="invoice_number">Invoice number</label>
           <input
@@ -110,7 +111,7 @@ export default async function NewInvoicePage() {
         >
           Create invoice
         </button>
-      </form>
+      </ActionForm>
     </div>
   )
 }

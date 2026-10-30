@@ -2,7 +2,9 @@ import { resend, EMAIL_FROM } from '@/lib/resend/client'
 
 // Server-only. Every function here swallows its own send error (logs, does
 // not throw) -- a failed notification email should never break the
-// customer/invoice flow that triggered it.
+// customer/invoice flow that triggered it -- and returns whether the email
+// was accepted. Resend reports failures as a returned { error }, not a
+// throw, so both paths are checked.
 
 // Values interpolated into HTML come from user-entered data (company and
 // customer names), so escape them.
@@ -31,10 +33,10 @@ export async function sendInvoiceReminderEmail(params: {
   invoiceNumber: string
   total: number
   dueDate: string | null
-}) {
+}): Promise<boolean> {
   const { to, customerName, companyName, invoiceNumber, total, dueDate } = params
   try {
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: EMAIL_FROM,
       to,
       subject: `Reminder: Invoice ${invoiceNumber} from ${companyName} is overdue`.replace(/[\r\n]+/g, ' '),
@@ -49,8 +51,14 @@ export async function sendInvoiceReminderEmail(params: {
         <p>If you've already sent payment, thank you -- please disregard this message.</p>
       `),
     })
+    if (error) {
+      console.error('sendInvoiceReminderEmail failed:', error)
+      return false
+    }
+    return true
   } catch (err) {
     console.error('sendInvoiceReminderEmail failed:', err)
+    return false
   }
 }
 
@@ -58,10 +66,10 @@ export async function sendWelcomeEmail(params: {
   to: string
   customerName: string
   companyName: string
-}) {
+}): Promise<boolean> {
   const { to, customerName, companyName } = params
   try {
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: EMAIL_FROM,
       to,
       subject: `Welcome to ${companyName}`.replace(/[\r\n]+/g, ' '),
@@ -71,8 +79,14 @@ export async function sendWelcomeEmail(params: {
         <p>If you have any questions, just reach out to ${esc(companyName)} directly.</p>
       `),
     })
+    if (error) {
+      console.error('sendWelcomeEmail failed:', error)
+      return false
+    }
+    return true
   } catch (err) {
     console.error('sendWelcomeEmail failed:', err)
+    return false
   }
 }
 
@@ -83,10 +97,10 @@ export async function sendMorningBriefingEmail(params: {
   activeClients: number
   jobsToday: number
   overdueCount: number
-}) {
+}): Promise<boolean> {
   const { to, companyName, revenueAtRisk, activeClients, jobsToday, overdueCount } = params
   try {
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: EMAIL_FROM,
       to,
       subject: `Morning briefing for ${companyName} -- ${new Date().toLocaleDateString()}`,
@@ -111,8 +125,14 @@ export async function sendMorningBriefingEmail(params: {
         </table>
       `),
     })
+    if (error) {
+      console.error('sendMorningBriefingEmail failed:', error)
+      return false
+    }
+    return true
   } catch (err) {
     console.error('sendMorningBriefingEmail failed:', err)
+    return false
   }
 }
 

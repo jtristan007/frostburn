@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
       const customer = invoice.customers as unknown as { name: string; email: string | null } | null
       if (!customer?.email) continue
       if (!shouldRemind(invoice.id, invoice.due_date, todayStr, newlyOverdueIds)) continue
-      await sendInvoiceReminderEmail({
+      const sent = await sendInvoiceReminderEmail({
         to: customer.email,
         customerName: customer.name,
         companyName: account.name,
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
         total: Number(invoice.total),
         dueDate: invoice.due_date,
       })
-      reminderCount++
+      if (sent) reminderCount++
     }
 
     const revenueAtRisk = (overdueInvoices.data ?? []).reduce(
@@ -130,7 +130,7 @@ export async function GET(request: NextRequest) {
       const { data: authUser } = await admin.auth.admin.getUserById(owner.data.user_id)
       const ownerEmail = authUser?.user?.email
       if (ownerEmail) {
-        await sendMorningBriefingEmail({
+        briefingSent = await sendMorningBriefingEmail({
           to: ownerEmail,
           companyName: account.name,
           revenueAtRisk,
@@ -138,7 +138,6 @@ export async function GET(request: NextRequest) {
           jobsToday: jobsToday.count ?? 0,
           overdueCount: reminderCount,
         })
-        briefingSent = true
       }
     }
 

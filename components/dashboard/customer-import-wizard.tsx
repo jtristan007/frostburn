@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { bulkImportCustomers, type ImportResult } from '@/app/actions/customers'
 import { parseCsv } from '@/lib/csv/parse'
@@ -39,6 +39,30 @@ function sampleValues(rows: string[][], colIndex: number, max = 3): string[] {
   return Array.from(seen)
 }
 
+// Up to 500 rows per request, and fewer when rows are large (long notes),
+// keeping each request well under the 1 MB server-action body limit.
+const IMPORT_BATCH_ROWS = 500
+const IMPORT_BATCH_BYTES = 600_000
+
+function toBatches<T>(rows: T[]): T[][] {
+  const encoder = new TextEncoder()
+  const batches: T[][] = []
+  let current: T[] = []
+  let bytes = 0
+  for (const row of rows) {
+    const size = encoder.encode(JSON.stringify(row)).length
+    if (current.length > 0 && (current.length >= IMPORT_BATCH_ROWS || bytes + size > IMPORT_BATCH_BYTES)) {
+      batches.push(current)
+      current = []
+      bytes = 0
+    }
+    current.push(row)
+    bytes += size
+  }
+  if (current.length > 0) batches.push(current)
+  return batches
+}
+
 export function CustomerImportWizard() {
   const [step, setStep] = useState<Step>('upload')
   const [parsed, setParsed] = useState<ParsedFile | null>(null)
@@ -47,12 +71,56 @@ export function CustomerImportWizard() {
   const [fileError, setFileError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [result, formAction, pending] = useActionState<ImportResult | undefined, FormData>(
-    bulkImportCustomers,
-    undefined
-  )
+  const [result, setResult] = useState<ImportResult | undefined>(undefined)
+  const [pending, setPending] = useState(false)
+  const [progress, setProgress] = useState(0)
 
   const stepIndex = STEPS.findIndex((s) => s.key === step)
+
+  // Sends the rows in batches: a server action's request body is capped
+  // (1 MB by default), and a full Jobber or Housecall Pro export can be
+  // bigger than that in one go. Batches run in order; if one fails, the
+  // message says how many were already imported so nothing gets re-added
+  // blindly.
+  async function runImport() {
+    setPending(true)
+    setResult(undefined)
+    setProgress(0)
+    let imported = 0
+    let skipped = 0
+    try {
+      const rows = readyRows.map((r) => ({
+        name: r.name,
+        email: r.email,
+        phone: r.phone,
+        address: r.address,
+        city: r.city,
+        notes: r.notes,
+      }))
+      for (const batch of toBatches(rows)) {
+        const fd = new FormData()
+        fd.set('rows_json', JSON.stringify(batch))
+        const res = await bulkImportCustomers(undefined, fd)
+        if ('error' in res) {
+          setResult({ error: imported > 0 ? `${res.error} (${imported} customers were imported before this error.)` : res.error })
+          return
+        }
+        imported += res.imported
+        skipped += res.skipped
+        setProgress(imported)
+      }
+      setResult({ imported, skipped })
+    } catch {
+      setResult({
+        error:
+          imported > 0
+            ? `The import stopped partway. ${imported} customers were imported -- check your customer list before trying again.`
+            : 'The import could not be completed. Please try again.',
+      })
+    } finally {
+      setPending(false)
+    }
+  }
 
   function loadTable(fileName: string, table: string[][]) {
     const rows = table.filter((r) => r.some((c) => c.trim()))
@@ -351,8 +419,12 @@ export function CustomerImportWizard() {
             <p className="text-sm text-red-500 mb-4">{result.error}</p>
           )}
 
-          <form action={formAction}>
-            <input type="hidden" name="rows_json" value={JSON.stringify(readyRows.map((r) => ({ name: r.name, email: r.email, phone: r.phone, address: r.address, city: r.city, notes: r.notes })))} />
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              void runImport()
+            }}
+          >
             <div className="flex items-center justify-between">
               <button
                 type="button"
@@ -366,7 +438,9 @@ export function CustomerImportWizard() {
                 disabled={pending || readyRows.length === 0}
                 className="text-sm font-semibold bg-ice text-navy px-4 py-2 rounded-lg hover:bg-ice-dim transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {pending ? 'Importing…' : `Import ${readyRows.length} customer${readyRows.length === 1 ? '' : 's'}`}
+                {pending
+                  ? `Importing ${progress.toLocaleString()} of ${readyRows.length.toLocaleString()}…`
+                  : `Import ${readyRows.length} customer${readyRows.length === 1 ? '' : 's'}`}
               </button>
             </div>
           </form>

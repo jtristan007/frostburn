@@ -1,3 +1,4 @@
+import { ActionForm } from '@/components/dashboard/action-form'
 import { createCustomer } from '@/app/actions/customers'
 
 const inputClass =
@@ -8,7 +9,7 @@ export default function NewCustomerPage() {
   return (
     <div className="max-w-lg">
       <h1 className="text-2xl font-bold text-navy mb-6">New Customer</h1>
-      <form action={createCustomer} className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+      <ActionForm action={createCustomer} className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
         <div>
           <label className={labelClass} htmlFor="name">Name</label>
           <input id="name" name="name" required className={inputClass} />
@@ -43,7 +44,7 @@ export default function NewCustomerPage() {
         >
           Create customer
         </button>
-      </form>
+      </ActionForm>
     </div>
   )
 }
