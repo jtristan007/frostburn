@@ -10,11 +10,13 @@ import { sendInvoiceEmail } from '@/lib/resend/emails'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
+type FormState = { error?: string } | undefined
+
 function readInvoiceFields(formData: FormData) {
   return {
     customer_id: formData.get('customer_id') as string,
     job_id: (formData.get('job_id') as string) || null,
-    invoice_number: formData.get('invoice_number') as string,
+    invoice_number: ((formData.get('invoice_number') as string) ?? '').trim(),
     status: formData.get('status') as string,
     issue_date: formData.get('issue_date') as string,
     due_date: (formData.get('due_date') as string) || null,
@@ -22,27 +24,53 @@ function readInvoiceFields(formData: FormData) {
   }
 }
 
+function validateInvoice(fields: ReturnType<typeof readInvoiceFields>): string | null {
+  if (!fields.customer_id) return 'Choose a customer for this invoice.'
+  if (!fields.invoice_number) return 'Enter an invoice number.'
+  if (!Number.isFinite(fields.total) || fields.total < 0) return 'Enter a total of $0 or more.'
+  return null
+}
+
+// Turns a database error into something the owner can act on. The only
+// constraint they can realistically hit from the form is the per-account
+// unique invoice number.
+function saveError(error: { code?: string; message: string }, invoiceNumber: string) {
+  if (error.code === '23505') {
+    return `Invoice number ${invoiceNumber} is already used. Pick a different number.`
+  }
+  console.error('Saving invoice failed:', error)
+  return 'The invoice could not be saved. Please try again.'
+}
+
 // A new invoice starts as a draft (or as already paid, for recording a cash
 // or check payment). "Sent" is only ever set by actually emailing it --
 // letting the owner pick "Sent" here showed "Sent ✓" for invoices that
 // never went out. Lands on the invoice page, where the Send button is.
-export async function createInvoice(formData: FormData) {
-  const supabase = await createClient()
+// Returns { error } for the form to show instead of throwing.
+export async function createInvoice(_prev: FormState, formData: FormData): Promise<FormState> {
   const fields = readInvoiceFields(formData)
+  const invalid = validateInvoice(fields)
+  if (invalid) return { error: invalid }
+
+  const supabase = await createClient()
   const status = fields.status === 'paid' ? 'paid' : 'draft'
   const { data, error } = await supabase
     .from('invoices')
     .insert({ ...fields, status, paid_at: status === 'paid' ? new Date().toISOString() : null })
     .select('id')
     .single()
-  if (error || !data) throw new Error(error?.message ?? 'Could not create invoice.')
+  if (error || !data) return { error: error ? saveError(error, fields.invoice_number) : 'The invoice could not be saved. Please try again.' }
   redirect(`/dashboard/invoices/${data.id}`)
 }
 
-export async function updateInvoice(id: string, formData: FormData) {
+export async function updateInvoice(id: string, _prev: FormState, formData: FormData): Promise<FormState> {
+  const fields = readInvoiceFields(formData)
+  const invalid = validateInvoice(fields)
+  if (invalid) return { error: invalid }
+
   const supabase = await createClient()
-  const { error } = await supabase.from('invoices').update(readInvoiceFields(formData)).eq('id', id)
-  if (error) throw new Error(error.message)
+  const { error } = await supabase.from('invoices').update(fields).eq('id', id)
+  if (error) return { error: saveError(error, fields.invoice_number) }
   redirect('/dashboard/invoices')
 }
 

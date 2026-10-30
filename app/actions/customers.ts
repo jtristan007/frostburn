@@ -5,33 +5,41 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { sendWelcomeEmail } from '@/lib/resend/emails'
 
-export async function createCustomer(formData: FormData) {
+type FormState = { error?: string } | undefined
+
+function readCustomerFields(formData: FormData) {
+  return {
+    name: ((formData.get('name') as string) ?? '').trim(),
+    email: ((formData.get('email') as string) ?? '').trim() || null,
+    phone: (formData.get('phone') as string) || null,
+    address: (formData.get('address') as string) || null,
+    city: (formData.get('city') as string)?.trim() || null,
+    notes: (formData.get('notes') as string) || null,
+  }
+}
+
+// Both return { error } for the form to show instead of throwing, which
+// used to land the owner on the generic error page with their input lost.
+export async function createCustomer(_prev: FormState, formData: FormData): Promise<FormState> {
+  const fields = readCustomerFields(formData)
+  if (!fields.name) return { error: 'Enter the customer’s name.' }
+
   const supabase = await createClient()
-  const email = (formData.get('email') as string) || null
+  const { data, error } = await supabase.from('customers').insert(fields).select('id').single()
 
-  const { data, error } = await supabase
-    .from('customers')
-    .insert({
-      name: formData.get('name') as string,
-      email,
-      phone: (formData.get('phone') as string) || null,
-      address: (formData.get('address') as string) || null,
-      city: (formData.get('city') as string)?.trim() || null,
-      notes: (formData.get('notes') as string) || null,
-    })
-    .select('id')
-    .single()
-
-  if (error || !data) throw new Error(error?.message ?? 'Could not create customer.')
+  if (error || !data) {
+    console.error('Creating customer failed:', error)
+    return { error: 'The customer could not be saved. Please try again.' }
+  }
 
   // Only when the owner ticks "Send a welcome email" on the form -- adding a
   // customer to try the product out should never email them by surprise.
-  if (email && formData.get('send_welcome') === 'on') {
+  if (fields.email && formData.get('send_welcome') === 'on') {
     const { data: account } = await supabase.from('accounts').select('name').single()
     if (account) {
       await sendWelcomeEmail({
-        to: email,
-        customerName: formData.get('name') as string,
+        to: fields.email,
+        customerName: fields.name,
         companyName: account.name,
       })
     }
@@ -40,21 +48,17 @@ export async function createCustomer(formData: FormData) {
   redirect(`/dashboard/customers/${data.id}`)
 }
 
-export async function updateCustomer(id: string, formData: FormData) {
-  const supabase = await createClient()
-  const { error } = await supabase
-    .from('customers')
-    .update({
-      name: formData.get('name') as string,
-      email: (formData.get('email') as string) || null,
-      phone: (formData.get('phone') as string) || null,
-      address: (formData.get('address') as string) || null,
-      city: (formData.get('city') as string)?.trim() || null,
-      notes: (formData.get('notes') as string) || null,
-    })
-    .eq('id', id)
+export async function updateCustomer(id: string, _prev: FormState, formData: FormData): Promise<FormState> {
+  const fields = readCustomerFields(formData)
+  if (!fields.name) return { error: 'Enter the customer’s name.' }
 
-  if (error) throw new Error(error.message)
+  const supabase = await createClient()
+  const { error } = await supabase.from('customers').update(fields).eq('id', id)
+
+  if (error) {
+    console.error('Updating customer failed:', error)
+    return { error: 'The customer could not be saved. Please try again.' }
+  }
   redirect(`/dashboard/customers/${id}`)
 }
 

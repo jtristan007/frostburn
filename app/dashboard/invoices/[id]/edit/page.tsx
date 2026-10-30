@@ -1,3 +1,4 @@
+import { ActionForm } from '@/components/dashboard/action-form'
 import { notFound } from 'next/navigation'
 import { getCurrentAccount } from '@/lib/account'
 import { updateInvoice, deleteInvoice } from '@/app/actions/invoices'
@@ -20,7 +21,7 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
   return (
     <div className="max-w-lg">
       <h1 className="text-2xl font-bold text-navy mb-6">Edit Invoice</h1>
-      <form
+      <ActionForm
         action={updateInvoice.bind(null, id)}
         className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4"
       >
@@ -71,7 +72,7 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
         >
           Save changes
         </button>
-      </form>
+      </ActionForm>
 
       <form action={deleteInvoice.bind(null, id)} className="mt-4">
         <button type="submit" className="text-sm text-red-500 hover:text-red-600">
