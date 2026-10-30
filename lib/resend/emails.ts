@@ -1,4 +1,5 @@
 import { resend, EMAIL_FROM } from '@/lib/resend/client'
+import { formatMoney, type Country } from '@/lib/money'
 
 // Server-only. Every function here swallows its own send error (logs, does
 // not throw) -- a failed notification email should never break the
@@ -33,8 +34,9 @@ export async function sendInvoiceReminderEmail(params: {
   invoiceNumber: string
   total: number
   dueDate: string | null
+  country: Country
 }): Promise<boolean> {
-  const { to, customerName, companyName, invoiceNumber, total, dueDate } = params
+  const { to, customerName, companyName, invoiceNumber, total, dueDate, country } = params
   try {
     const { error } = await resend.emails.send({
       from: EMAIL_FROM,
@@ -45,7 +47,7 @@ export async function sendInvoiceReminderEmail(params: {
         <p>This is a friendly reminder that invoice <strong>${esc(invoiceNumber)}</strong> from <strong>${esc(companyName)}</strong> is now overdue.</p>
         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin:16px 0;">
           <div style="font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.04em;">Amount due</div>
-          <div style="font-size:24px; font-weight:700;">$${total.toFixed(2)}</div>
+          <div style="font-size:24px; font-weight:700;">${formatMoney(total, country)}</div>
           ${dueDate ? `<div style="font-size:13px; color:#64748b; margin-top:4px;">Was due ${esc(dueDate)}</div>` : ''}
         </div>
         <p>If you've already sent payment, thank you -- please disregard this message.</p>
@@ -147,21 +149,22 @@ export async function sendInvoiceEmail(params: {
   total: number
   dueDate: string | null
   payUrl: string | null
+  country: Country
 }): Promise<boolean> {
-  const { to, replyTo, customerName, companyName, invoiceNumber, total, dueDate, payUrl } = params
+  const { to, replyTo, customerName, companyName, invoiceNumber, total, dueDate, payUrl, country } = params
   const company = esc(companyName)
   try {
     const { error } = await resend.emails.send({
       from: `"${companyName.replace(/[<>"\\\r\n]/g, '')} via Frostburn" <notifications@frostburn.io>`,
       to,
       replyTo,
-      subject: `Invoice ${invoiceNumber} from ${companyName}: $${total.toFixed(2)}`.replace(/[\r\n]+/g, ' '),
+      subject: `Invoice ${invoiceNumber} from ${companyName}: ${formatMoney(total, country)}`.replace(/[\r\n]+/g, ' '),
       html: wrapper(`
         <p>Hi ${esc(customerName)},</p>
         <p>Here is invoice <strong>${esc(invoiceNumber)}</strong> from <strong>${company}</strong>.</p>
         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin:16px 0;">
           <div style="font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.04em;">Amount due</div>
-          <div style="font-size:24px; font-weight:700;">$${total.toFixed(2)}</div>
+          <div style="font-size:24px; font-weight:700;">${formatMoney(total, country)}</div>
           ${dueDate ? `<div style="font-size:13px; color:#64748b; margin-top:4px;">Due ${esc(dueDate)}</div>` : ''}
         </div>
         ${

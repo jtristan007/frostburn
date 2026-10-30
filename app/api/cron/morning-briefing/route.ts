@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendInvoiceReminderEmail, sendMorningBriefingEmail } from '@/lib/resend/emails'
 import { reconcileOpenCheckouts } from '@/lib/stripe-connect/reconcile'
+import { countryOf } from '@/lib/money'
 
 // Runs once daily (see vercel.json). Marks sent invoices past due as
 // overdue, then for every account: emails a reminder for overdue invoices
@@ -71,7 +72,9 @@ export async function GET(request: NextRequest) {
 
   const { data: accounts, error: accountsError } = await admin
     .from('accounts')
-    .select('id, name')
+    // '*' so this keeps working if the code ships before migration 0017
+    // adds `country` (countryOf -> US).
+    .select('*')
 
   if (accountsError) {
     return NextResponse.json({ error: accountsError.message }, { status: 500 })
@@ -116,6 +119,7 @@ export async function GET(request: NextRequest) {
         invoiceNumber: invoice.invoice_number,
         total: Number(invoice.total),
         dueDate: invoice.due_date,
+        country: countryOf(account),
       })
       if (sent) reminderCount++
     }

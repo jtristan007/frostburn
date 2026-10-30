@@ -5,6 +5,7 @@ import {
   syncConnectedAccountStatus,
 } from '@/lib/stripe-connect/client'
 import { connectStripePayments } from '@/app/actions/stripe-connect'
+import { COUNTRY_LABELS, countryOf, type Country } from '@/lib/money'
 
 const STATUS_COPY: Record<string, { label: string; tone: string }> = {
   not_connected: { label: 'Not connected', tone: 'text-gray-400' },
@@ -73,7 +74,7 @@ export default async function PaymentsSettingsPage({
         {status === 'active' ? (
           <p className="text-xs text-gray-400">
             Invoices now show a &quot;Pay now&quot; link that goes straight to your connected Stripe
-            account.
+            account. Customers are charged in {COUNTRY_LABELS[countryOf(account)]}.
           </p>
         ) : (
           <>
@@ -82,7 +83,31 @@ export default async function PaymentsSettingsPage({
                 ? "You've started but Stripe still needs a bit more information before you can accept payments."
                 : "You'll be sent to Stripe to set up (or connect) your own account."}
             </p>
-            <form action={connectStripePayments}>
+            <form action={connectStripePayments} className="space-y-4">
+              {!account.stripe_connect_account_id ? (
+                <div>
+                  <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Where is your business?
+                  </label>
+                  <select
+                    id="country"
+                    name="country"
+                    defaultValue={countryOf(account)}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-ice focus:border-transparent transition"
+                  >
+                    {(Object.keys(COUNTRY_LABELS) as Country[]).map((c) => (
+                      <option key={c} value={c}>
+                        {COUNTRY_LABELS[c]}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1.5 text-xs text-gray-400">
+                    Your customers are charged in this currency. It can&apos;t be changed after you connect.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400">Charging in {COUNTRY_LABELS[countryOf(account)]}.</p>
+              )}
               <button
                 type="submit"
                 className="text-sm font-semibold bg-ice text-navy px-4 py-2 rounded-lg hover:bg-ice-dim transition-colors"
