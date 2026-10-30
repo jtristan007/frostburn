@@ -28,11 +28,14 @@ export async function getPortalByToken(token: string) {
       .from('invoices')
       .select('id, invoice_number, status, total, due_date, pay_token')
       .eq('customer_id', customer.id)
+      // Drafts aren't the customer's business until they're sent.
+      .neq('status', 'draft')
       .order('issue_date', { ascending: false }),
     admin
       .from('quotes')
       .select('id, status, total, created_at, share_token')
       .eq('customer_id', customer.id)
+      .neq('status', 'draft')
       .order('created_at', { ascending: false }),
     admin
       .from('equipment')

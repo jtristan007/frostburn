@@ -64,7 +64,11 @@ export async function completeJobWithCapture(
 
   if (!job) throw new Error('Job not found.')
 
-  await supabase
+  // Only the request that actually moves the job to complete goes on to
+  // count the agreement visit and write service history. A double submit
+  // or second tab used to count the visit twice and push the next service
+  // date out again; a failed update used to count it anyway.
+  const { data: completed, error: completeError } = await supabase
     .from('jobs')
     .update({
       status: 'complete',
@@ -73,6 +77,10 @@ export async function completeJobWithCapture(
       signed_at: data.signatureUrl ? new Date().toISOString() : null,
     })
     .eq('id', id)
+    .neq('status', 'complete')
+    .select('id')
+  if (completeError) throw new Error(completeError.message)
+  if (!completed || completed.length === 0) redirect(`/dashboard/jobs`)
 
   // An included agreement visit: bump the used-this-period count and push
   // next_service_date forward by the agreement's own cadence (365 /

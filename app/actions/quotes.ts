@@ -52,7 +52,8 @@ export async function getQuoteByToken(token: string) {
     .eq('share_token', token)
     .maybeSingle()
 
-  if (!quote) return null
+  // A draft isn't ready for the customer even if its link leaked early.
+  if (!quote || quote.status === 'draft') return null
 
   const [{ data: items }, { data: customer }] = await Promise.all([
     admin
@@ -74,15 +75,18 @@ export async function getQuoteByToken(token: string) {
 // shouldn't be reachable by token yet, and re-deciding an already-answered
 // quote would silently overwrite the first answer.
 export async function respondToQuote(token: string, decision: 'approved' | 'declined') {
-  const admin = createAdminClient()
-  const { data: quote } = await admin.from('quotes').select('id, status').eq('share_token', token).maybeSingle()
+  // A public endpoint: the type annotation isn't enforced at runtime, so
+  // anyone with the link could otherwise set the status to anything.
+  if (decision !== 'approved' && decision !== 'declined') redirect(`/quote/${token}`)
 
-  if (quote && quote.status === 'sent') {
-    await admin
-      .from('quotes')
-      .update({ status: decision, responded_at: new Date().toISOString() })
-      .eq('id', quote.id)
-  }
+  const admin = createAdminClient()
+  // Only a 'sent' quote changes, checked in the update itself so two
+  // responses racing can't overwrite each other.
+  await admin
+    .from('quotes')
+    .update({ status: decision, responded_at: new Date().toISOString() })
+    .eq('share_token', token)
+    .eq('status', 'sent')
 
   redirect(`/quote/${token}`)
 }
