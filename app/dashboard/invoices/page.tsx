@@ -41,7 +41,24 @@ export default async function InvoicesPage() {
 
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
         {(invoices ?? []).length === 0 ? (
-          <p className="text-sm text-gray-400 p-6">No invoices yet.</p>
+          <div className="p-8 sm:p-10 text-center">
+            <p className="text-base font-semibold text-navy">No invoices yet</p>
+            <p className="mt-1 text-sm text-gray-500 max-w-md mx-auto">
+              Create an invoice, then email it to your customer from its page. With card payments turned on, it
+              includes a Pay now button.
+            </p>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                href="/dashboard/invoices/new"
+                className="text-sm font-semibold bg-ice text-navy px-4 py-2 rounded-lg hover:bg-ice-dim transition-colors"
+              >
+                Create your first invoice
+              </Link>
+              <Link href="/dashboard/settings/payments" className="text-sm font-medium text-sky-600 hover:text-navy">
+                Turn on card payments
+              </Link>
+            </div>
+          </div>
         ) : (
           <table className="w-full text-sm">
             <tbody>

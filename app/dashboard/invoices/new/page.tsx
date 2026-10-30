@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { getCurrentAccount } from '@/lib/account'
 import { createInvoice } from '@/app/actions/invoices'
 import { CustomerSelect } from '@/components/dashboard/customer-select'
@@ -16,6 +17,33 @@ export default async function NewInvoicePage() {
     supabase.from('customers').select('id, name').order('name'),
     supabase.from('jobs').select('id, job_type, scheduled_date, customers(name)').order('scheduled_date', { ascending: false }),
   ])
+
+  // An invoice needs a customer; without any, the form below would be a
+  // dead end (the required customer dropdown has nothing to pick).
+  if ((customers ?? []).length === 0) {
+    return (
+      <div className="max-w-lg">
+        <h1 className="text-2xl font-bold text-navy mb-6">New Invoice</h1>
+        <div className="bg-white rounded-2xl border border-gray-100 p-6">
+          <p className="text-sm font-semibold text-navy">Add a customer first</p>
+          <p className="mt-1 text-sm text-gray-500">
+            Every invoice goes to a customer. Import your list or add the one you&apos;re billing, then come back here.
+          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <Link
+              href="/dashboard/customers/new"
+              className="text-sm font-semibold bg-ice text-navy px-4 py-2 rounded-lg hover:bg-ice-dim transition-colors"
+            >
+              Add a customer
+            </Link>
+            <Link href="/dashboard/customers/import" className="text-sm font-medium text-sky-600 hover:text-navy">
+              Import customers
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-lg">
