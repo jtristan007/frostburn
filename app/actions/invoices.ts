@@ -22,11 +22,21 @@ function readInvoiceFields(formData: FormData) {
   }
 }
 
+// A new invoice starts as a draft (or as already paid, for recording a cash
+// or check payment). "Sent" is only ever set by actually emailing it --
+// letting the owner pick "Sent" here showed "Sent ✓" for invoices that
+// never went out. Lands on the invoice page, where the Send button is.
 export async function createInvoice(formData: FormData) {
   const supabase = await createClient()
-  const { error } = await supabase.from('invoices').insert(readInvoiceFields(formData))
-  if (error) throw new Error(error.message)
-  redirect('/dashboard/invoices')
+  const fields = readInvoiceFields(formData)
+  const status = fields.status === 'paid' ? 'paid' : 'draft'
+  const { data, error } = await supabase
+    .from('invoices')
+    .insert({ ...fields, status, paid_at: status === 'paid' ? new Date().toISOString() : null })
+    .select('id')
+    .single()
+  if (error || !data) throw new Error(error?.message ?? 'Could not create invoice.')
+  redirect(`/dashboard/invoices/${data.id}`)
 }
 
 export async function updateInvoice(id: string, formData: FormData) {
@@ -38,7 +48,7 @@ export async function updateInvoice(id: string, formData: FormData) {
 
 export async function markInvoicePaid(id: string) {
   const supabase = await createClient()
-  await supabase.from('invoices').update({ status: 'paid' }).eq('id', id)
+  await supabase.from('invoices').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', id)
   revalidatePath('/dashboard/invoices')
 }
 
@@ -104,25 +114,36 @@ export async function payInvoice(token: string) {
     redirect(`/pay/${token}?error=${encodeURIComponent('Online payment is not available for this invoice yet.')}`)
   }
 
-  const session = await stripe.checkout.sessions.create(
-    {
-      mode: 'payment',
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            unit_amount: Math.round(Number(invoice.total) * 100),
-            product_data: { name: `Invoice ${invoice.invoice_number}` },
+  const amount = Math.round(Number(invoice.total) * 100)
+  if (!(amount >= 50)) {
+    redirect(`/pay/${token}?error=${encodeURIComponent('This invoice amount can’t be paid online. Please contact the company directly.')}`)
+  }
+
+  let session: Awaited<ReturnType<typeof stripe.checkout.sessions.create>>
+  try {
+    session = await stripe.checkout.sessions.create(
+      {
+        mode: 'payment',
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              unit_amount: amount,
+              product_data: { name: `Invoice ${invoice.invoice_number}` },
+            },
+            quantity: 1,
           },
-          quantity: 1,
-        },
-      ],
-      metadata: { invoice_id: invoice.id },
-      success_url: `${siteUrl}/pay/${token}?paid=1`,
-      cancel_url: `${siteUrl}/pay/${token}`,
-    },
-    { stripeAccount: account.stripe_connect_account_id }
-  )
+        ],
+        metadata: { invoice_id: invoice.id },
+        success_url: `${siteUrl}/pay/${token}?paid=1`,
+        cancel_url: `${siteUrl}/pay/${token}`,
+      },
+      { stripeAccount: account.stripe_connect_account_id }
+    )
+  } catch (err) {
+    console.error('Invoice Checkout session creation failed:', err)
+    redirect(`/pay/${token}?error=${encodeURIComponent('Online payment is temporarily unavailable. Please try again in a few minutes.')}`)
+  }
 
   if (!session.url) redirect(`/pay/${token}?error=${encodeURIComponent('Stripe did not return a payment URL.')}`)
 

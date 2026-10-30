@@ -44,7 +44,15 @@ export async function createCheckoutSession(tier: Tier) {
       line_items: [{ price: PRICE_IDS[tier], quantity: 1 }],
       client_reference_id: accountId,
       customer_email: email,
-      subscription_data: { trial_period_days: TRIAL_PERIOD_DAYS },
+      // The signup page promises "no credit card required to start", so
+      // only collect a card if Stripe needs one (it doesn't for a trial).
+      // A trial that ends without a card on file cancels instead of
+      // leaving an unpaid subscription behind.
+      payment_method_collection: 'if_required',
+      subscription_data: {
+        trial_period_days: TRIAL_PERIOD_DAYS,
+        trial_settings: { end_behavior: { missing_payment_method: 'cancel' } },
+      },
       success_url: `${siteUrl}/dashboard?checkout=success`,
       cancel_url: `${siteUrl}/onboarding/plan?checkout=cancelled`,
       metadata: { account_id: accountId, tier },

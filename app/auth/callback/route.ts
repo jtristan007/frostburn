@@ -5,7 +5,10 @@ import { createAccountForNewUser } from '@/app/actions/account'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/dashboard'
+  const nextParam = searchParams.get('next') ?? '/dashboard'
+  // Only same-site paths -- never an absolute, protocol-relative or
+  // userinfo-style target like "@evil.com" (same rule as /auth/confirm).
+  const next = /^\/(?![\/\\])/.test(nextParam) ? nextParam : '/dashboard'
 
   if (code) {
     const supabase = await createClient()

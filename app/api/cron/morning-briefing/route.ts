@@ -3,8 +3,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendInvoiceReminderEmail, sendMorningBriefingEmail } from '@/lib/resend/emails'
 import { reconcileOpenCheckouts } from '@/lib/stripe-connect/reconcile'
 
-// Runs once daily (see vercel.json). For every account: emails a reminder
-// for each overdue invoice with a customer email on file, then emails the
+// Runs once daily (see vercel.json). Marks sent invoices past due as
+// overdue, then for every account: emails a reminder for overdue invoices
+// on the cadence in shouldRemind() (customer email on file only), then emails the
 // account owner a briefing of the day's numbers. Uses the service-role
 // client throughout -- a cron request has no user session to scope a
 // normal client to, same reasoning as the Stripe webhook.
@@ -57,6 +58,17 @@ export async function GET(request: NextRequest) {
     })
   }
 
+  // Sent invoices past their due date become overdue. Nothing else ever
+  // set this status, so "revenue at risk" and the reminders below only
+  // worked if the owner flipped it by hand.
+  const { data: newlyOverdue } = await admin
+    .from('invoices')
+    .update({ status: 'overdue' })
+    .eq('status', 'sent')
+    .lt('due_date', todayStr)
+    .select('id')
+  const newlyOverdueIds = new Set((newlyOverdue ?? []).map((i) => i.id))
+
   const { data: accounts, error: accountsError } = await admin
     .from('accounts')
     .select('id, name')
@@ -96,6 +108,7 @@ export async function GET(request: NextRequest) {
     for (const invoice of overdueInvoices.data ?? []) {
       const customer = invoice.customers as unknown as { name: string; email: string | null } | null
       if (!customer?.email) continue
+      if (!shouldRemind(invoice.id, invoice.due_date, todayStr, newlyOverdueIds)) continue
       await sendInvoiceReminderEmail({
         to: customer.email,
         customerName: customer.name,
@@ -133,4 +146,23 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json({ ok: true, invoicesReconciled: reconciled, agreementsRenewed: dueForRenewal?.length ?? 0, results })
+}
+
+// Reminder cadence: the day an invoice goes overdue, then 7, 14 and 30 days
+// past due -- instead of emailing the homeowner every single day. Invoices
+// with no due date (only possible if marked overdue by hand) get none.
+const REMINDER_DAYS_PAST_DUE = new Set([7, 14, 30])
+
+function shouldRemind(
+  invoiceId: string,
+  dueDate: string | null,
+  todayStr: string,
+  newlyOverdueIds: Set<string>
+) {
+  if (newlyOverdueIds.has(invoiceId)) return true
+  if (!dueDate) return false
+  const daysPastDue = Math.round(
+    (Date.parse(`${todayStr}T00:00:00Z`) - Date.parse(`${dueDate.slice(0, 10)}T00:00:00Z`)) / 86_400_000
+  )
+  return REMINDER_DAYS_PAST_DUE.has(daysPastDue)
 }
