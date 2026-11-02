@@ -374,7 +374,7 @@ export function FrostHero() {
               </div>
               {[
                 '2 overdue reminders sent',
-                'New client welcomed',
+                'Paid invoice, reminders stopped',
                 'Morning briefing delivered',
               ].map((a) => (
                 <div key={a} className="text-[13px] text-[#d6e4f5] flex items-center gap-2.5 py-1">

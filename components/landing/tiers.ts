@@ -8,6 +8,8 @@ export const TIERS = [
     price: TIER_PRICES.starter,
     techs: '1–5 techs',
     features: [
+      'Invoicing & online card payments',
+      'Automatic overdue reminders',
       'Pricing book & quotes',
       'Equipment history',
       'Scheduling',

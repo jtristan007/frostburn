@@ -366,7 +366,7 @@ export default function LandingPage() {
         <div className="grid md:grid-cols-4 gap-6">
           {[
             ['1', 'Create your account', 'Set up your business profile and pricing book. Zero tech knowledge required.'],
-            ['2', 'Add your clients', 'Import existing customers or add them one by one. Each one gets welcomed automatically.'],
+            ['2', 'Add your clients', 'Import your customer list from a CSV or add clients one by one. Imports are quiet: nobody gets an email until you send them something.'],
             ['3', 'You’re automated by default', 'Overdue reminders and your morning briefing go out on their own, every day, from day one.'],
             ['4', 'Go do the work', 'Focus on the jobs. Frostburn handles the desk stuff.'],
           ].map(([num, title, body]) => (
