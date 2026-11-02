@@ -42,6 +42,7 @@ const SETTINGS_LINKS = [
   { href: '/dashboard/settings/quickbooks', label: 'QuickBooks' },
   { href: '/dashboard/settings/payments', label: 'Payments' },
   { href: '/dashboard/settings/branding', label: 'Branding' },
+  { href: '/dashboard/settings/reminders', label: 'Reminders' },
   { href: '/dashboard/settings/billing', label: 'Billing' },
 ]
 
