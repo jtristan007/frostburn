@@ -111,8 +111,13 @@ export async function GET(request: NextRequest) {
         .maybeSingle(),
     ])
 
+    // Shops can pause reminders in Settings > Reminders. `!== false` so
+    // reminders keep going if this ships before migration 0021 adds the
+    // column.
+    const remindersOn = account.overdue_reminders_enabled !== false
+
     let reminderCount = 0
-    for (const invoice of overdueInvoices.data ?? []) {
+    for (const invoice of remindersOn ? (overdueInvoices.data ?? []) : []) {
       const customer = invoice.customers as unknown as { name: string; email: string | null } | null
       if (!customer?.email) continue
       if (!shouldRemind(invoice.id, invoice.due_date, todayStr, newlyOverdueIds)) continue

@@ -27,7 +27,7 @@ function wrapper(bodyHtml: string) {
   `
 }
 
-export async function sendInvoiceReminderEmail(params: {
+export type InvoiceReminderParams = {
   to: string
   customerName: string
   companyName: string
@@ -35,14 +35,15 @@ export async function sendInvoiceReminderEmail(params: {
   total: number
   dueDate: string | null
   country: Country
-}): Promise<boolean> {
-  const { to, customerName, companyName, invoiceNumber, total, dueDate, country } = params
-  try {
-    const { error } = await resend.emails.send({
-      from: EMAIL_FROM,
-      to,
-      subject: `Reminder: Invoice ${invoiceNumber} from ${companyName} is overdue`.replace(/[\r\n]+/g, ' '),
-      html: wrapper(`
+}
+
+// The overdue reminder's subject and HTML, built separately from sending so
+// Settings > Reminders can preview exactly what customers receive.
+export function invoiceReminderEmail(params: Omit<InvoiceReminderParams, 'to'>) {
+  const { customerName, companyName, invoiceNumber, total, dueDate, country } = params
+  return {
+    subject: `Reminder: Invoice ${invoiceNumber} from ${companyName} is overdue`.replace(/[\r\n]+/g, ' '),
+    html: wrapper(`
         <p>Hi ${esc(customerName)},</p>
         <p>This is a friendly reminder that invoice <strong>${esc(invoiceNumber)}</strong> from <strong>${esc(companyName)}</strong> is now overdue.</p>
         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin:16px 0;">
@@ -52,6 +53,16 @@ export async function sendInvoiceReminderEmail(params: {
         </div>
         <p>If you've already sent payment, thank you -- please disregard this message.</p>
       `),
+  }
+}
+
+export async function sendInvoiceReminderEmail(params: InvoiceReminderParams): Promise<boolean> {
+  const { to, ...rest } = params
+  try {
+    const { error } = await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      ...invoiceReminderEmail(rest),
     })
     if (error) {
       console.error('sendInvoiceReminderEmail failed:', error)
