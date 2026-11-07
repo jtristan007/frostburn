@@ -1,11 +1,13 @@
 import Link from 'next/link'
 import { after } from 'next/server'
+import { headers } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentAccount } from '@/lib/account'
 import { accountTimeZone, dayRangeUtc, todayIn } from '@/lib/tz'
 import { updateFieldStatus, type FieldStatus } from '@/app/actions/jobs'
-import { partitionByCoordinates, geocodePending, addressLine } from '@/lib/geocode'
-import { DispatchMap, type MapJob, type MapStatus } from '@/components/dashboard/dispatch-map'
+import { partitionByCoordinates, geocodePending, addressLine, customerCenter } from '@/lib/geocode'
+import { countryOf } from '@/lib/money'
+import { DispatchMap, type MapHome, type MapJob, type MapStatus } from '@/components/dashboard/dispatch-map'
 
 const FIELD_STATUS_LABELS: Record<FieldStatus, string> = {
   dispatched: 'Dispatched',
@@ -44,7 +46,9 @@ export default async function DispatchPage() {
   const todayStr = todayIn(tz)
   const { start: dayStart, end: dayEnd } = dayRangeUtc(todayStr, tz)
 
-  const [{ data: jobs }, { data: technicians }] = await Promise.all([
+  const country = countryOf(account)
+
+  const [{ data: jobs }, { data: technicians }, { data: allCustomers }] = await Promise.all([
     supabase
       .from('jobs')
       .select(
@@ -54,6 +58,14 @@ export default async function DispatchPage() {
       .lt('scheduled_date', dayEnd)
       .order('scheduled_date'),
     supabase.from('account_users').select('user_id, full_name'),
+    // Every customer address (capped), so the map can open on the shop's own
+    // area even on a day with no jobs, and so addresses get placed ahead of
+    // their first job instead of on the day of it.
+    supabase
+      .from('customers')
+      .select('id, address, city, latitude, longitude, geocoded_address')
+      .not('address', 'is', null)
+      .limit(500),
   ])
 
   const techNameById = new Map((technicians ?? []).map((t) => [t.user_id, t.full_name ?? 'Unnamed']))
@@ -78,11 +90,28 @@ export default async function DispatchPage() {
 
   // Pins come from saved coordinates only, so the page never waits on a
   // lookup; new or edited addresses are geocoded after the response and
-  // show up on the next load.
-  const { coords, pending } = partitionByCoordinates(
-    (jobs ?? []).map(customerOf).filter((c): c is JobCustomer => c !== null)
-  )
-  if (pending.length) after(() => geocodePending(createAdminClient(), pending))
+  // show up on the next load -- today's job addresses first, then the rest
+  // of the customer list.
+  const todaysCustomers = (jobs ?? []).map(customerOf).filter((c): c is JobCustomer => c !== null)
+  const { coords, pending: pendingToday } = partitionByCoordinates(todaysCustomers)
+  const { coords: allCoords, pending: pendingOther } = partitionByCoordinates(allCustomers ?? [])
+  const todayIds = new Set(pendingToday.map((p) => p.id))
+  const pending = [...pendingToday, ...pendingOther.filter((p) => !todayIds.has(p.id))]
+  if (pending.length) after(() => geocodePending(createAdminClient(), pending, country))
+
+  // Where the map opens when there's nothing to pin today: the middle of the
+  // shop's placed customers, else roughly where the person viewing it is
+  // (Vercel's IP geolocation -- right for a brand-new shop that hasn't added
+  // customers yet), else the whole country.
+  const home: MapHome | null = await (async () => {
+    const center = customerCenter(Array.from(allCoords.values(), (c) => ({ latitude: c.lat, longitude: c.lng })))
+    if (center) return { ...center, zoom: 10 }
+    const h = await headers()
+    const lat = Number(h.get('x-vercel-ip-latitude'))
+    const lng = Number(h.get('x-vercel-ip-longitude'))
+    if (h.get('x-vercel-ip-latitude') && Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng, zoom: 10 }
+    return null
+  })()
 
   const stopCount = new Map<string, number>()
   const mapJobs: MapJob[] = []
@@ -130,14 +159,14 @@ export default async function DispatchPage() {
         </p>
       </div>
 
-      {groups.length === 0 ? (
-        <p className="text-sm text-gray-400 bg-white rounded-2xl border border-gray-100 p-6">
-          No jobs scheduled today.
-        </p>
-      ) : (
-        <div className="space-y-6">
-          {mapJobs.length > 0 && <DispatchMap jobs={mapJobs} unplaced={unplaced} />}
-          {groups.map((group) => (
+      <div className="space-y-6">
+        <DispatchMap jobs={mapJobs} unplaced={unplaced} home={home} country={country} />
+        {groups.length === 0 ? (
+          <p className="text-sm text-gray-400 bg-white rounded-2xl border border-gray-100 p-6">
+            No jobs scheduled today.
+          </p>
+        ) : (
+          groups.map((group) => (
             <div key={group.techId} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
               <div className="px-6 py-3.5 border-b border-gray-100 flex items-center justify-between">
                 <span className="font-semibold text-navy">{group.techName}</span>
@@ -216,9 +245,9 @@ export default async function DispatchPage() {
                 })}
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </div>
   )
 }

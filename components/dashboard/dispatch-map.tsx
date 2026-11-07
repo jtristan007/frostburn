@@ -24,7 +24,17 @@ export type MapJob = {
   stop: number
 }
 
+// Where the map opens when there's nothing to pin: the shop's area, worked
+// out on the server (see the dispatch page).
+export type MapHome = { lat: number; lng: number; zoom: number }
+
 const STYLE_URL = 'https://tiles.openfreemap.org/styles/positron'
+
+// Whole-country views, used only until the shop's area is known.
+const COUNTRY_VIEW = {
+  US: { center: [-98.5, 39.8] as [number, number], zoom: 3 },
+  CA: { center: [-106, 56] as [number, number], zoom: 2.6 },
+}
 
 export const STATUS_META: Record<MapStatus, { label: string; color: string }> = {
   scheduled: { label: 'Scheduled', color: '#94a3b8' },
@@ -81,7 +91,17 @@ function pinElement(job: MapJob) {
   return pin
 }
 
-export function DispatchMap({ jobs, unplaced }: { jobs: MapJob[]; unplaced: number }) {
+export function DispatchMap({
+  jobs,
+  unplaced,
+  home,
+  country,
+}: {
+  jobs: MapJob[]
+  unplaced: number
+  home: MapHome | null
+  country: 'US' | 'CA'
+}) {
   const boxRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MlMap | null>(null)
   const markersRef = useRef<Marker[]>([])
@@ -108,8 +128,8 @@ export function DispatchMap({ jobs, unplaced }: { jobs: MapJob[]; unplaced: numb
         map = new maplibre.Map({
           container: boxRef.current,
           style: STYLE_URL,
-          center: [-98.5, 39.8],
-          zoom: 3,
+          center: home ? [home.lng, home.lat] : COUNTRY_VIEW[country].center,
+          zoom: home ? home.zoom : COUNTRY_VIEW[country].zoom,
           attributionControl: { compact: true },
           cooperativeGestures: true,
         })
@@ -135,6 +155,8 @@ export function DispatchMap({ jobs, unplaced }: { jobs: MapJob[]; unplaced: numb
       map?.remove()
       mapRef.current = null
     }
+    // Created once; later framing changes go through the effect below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Redraw pins, route and framing whenever the selection changes.
@@ -190,12 +212,14 @@ export function DispatchMap({ jobs, unplaced }: { jobs: MapJob[]; unplaced: numb
         const bounds = new maplibre.LngLatBounds()
         visible.forEach((j) => bounds.extend([j.lng, j.lat]))
         map.fitBounds(bounds, { padding: 60, maxZoom: 14, duration: 600 })
+      } else if (home) {
+        map.easeTo({ center: [home.lng, home.lat], zoom: home.zoom, duration: 600 })
       }
     })()
     return () => {
       cancelled = true
     }
-  }, [ready, visible, tech])
+  }, [ready, visible, tech, home])
 
   const counts = useMemo(() => {
     const c: Partial<Record<MapStatus, number>> = {}
@@ -240,6 +264,11 @@ export function DispatchMap({ jobs, unplaced }: { jobs: MapJob[]; unplaced: numb
       <div className="relative h-[320px] sm:h-[420px] bg-slate-100">
         {/* maplibre's CSS sets position:relative on the container, so size it explicitly. */}
         <div ref={boxRef} className="h-full w-full" />
+        {!failed && jobs.length === 0 && (
+          <p className="absolute left-1/2 top-3 -translate-x-1/2 bg-white/90 rounded-full px-3 py-1 text-xs text-gray-600 shadow-sm pointer-events-none">
+            {unplaced > 0 ? 'Today’s jobs aren’t on the map yet' : 'No jobs on the map today'}
+          </p>
+        )}
         {failed && (
           <p className="absolute inset-0 flex items-center justify-center text-sm text-gray-500">
             The map couldn’t load right now. Your jobs are listed below.
@@ -251,7 +280,7 @@ export function DispatchMap({ jobs, unplaced }: { jobs: MapJob[]; unplaced: numb
         <p className="px-5 py-2.5 text-xs text-gray-500 border-t border-gray-100">
           {tech !== 'all' && 'Dashed line shows the route in stop order. '}
           {unplaced > 0 &&
-            `${unplaced} job${unplaced === 1 ? '' : 's'} not on the map. Add a full street address (with city and state) to the customer to place it.`}
+            `${unplaced} job${unplaced === 1 ? '' : 's'} not on the map. New addresses usually appear within a minute; if one doesn’t, check the customer’s street address and city.`}
         </p>
       )}
     </div>
