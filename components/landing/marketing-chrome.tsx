@@ -6,17 +6,17 @@ import { Logo } from '@/components/logo'
 export function MarketingHeader() {
   return (
     <header className="border-b border-white/10">
-      <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
         <Link href="/" aria-label="Frostburn home">
-          <Logo className="h-12" />
+          <Logo className="h-10 sm:h-12" />
         </Link>
-        <div className="flex items-center gap-4">
-          <Link href="/login" className="text-sm font-medium text-gray-300 hover:text-white">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <Link href="/login" className="text-sm font-medium text-gray-300 hover:text-white whitespace-nowrap">
             Sign in
           </Link>
           <Link
             href="/signup"
-            className="text-sm font-semibold bg-ice text-navy px-4 py-2 rounded-lg hover:bg-ice-dim transition-colors"
+            className="text-sm font-semibold bg-ice text-navy px-4 py-2 rounded-lg hover:bg-ice-dim transition-colors whitespace-nowrap"
           >
             Get Started
           </Link>
@@ -30,6 +30,7 @@ export const MARKETING_LINKS = [
   { href: '/pricing', label: 'Pricing' },
   { href: '/hvac-software-small-business', label: 'HVAC software for small business' },
   { href: '/hvac-invoicing-software', label: 'HVAC invoicing software' },
+  { href: '/templates', label: 'Free HVAC templates' },
   { href: '/jobber-alternative', label: 'Jobber alternative' },
   { href: '/housecall-pro-alternative', label: 'Housecall Pro alternative' },
   { href: '/servicetitan-alternative', label: 'ServiceTitan alternative' },

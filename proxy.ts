@@ -20,6 +20,7 @@ const publicPaths = [
   '/hvac-software-small-business',
   '/hvac-invoicing-software',
   '/pricing',
+  '/templates',
   '/api/stripe/webhook',
   '/api/cron',
   // Search engine + social preview files -- must never redirect to /login.
