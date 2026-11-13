@@ -104,3 +104,43 @@ body {
     transform: none;
   }
 }
+
+/* Free template pages (/templates/*): everything except the white template
+   sheet is print:hidden, so "Save as PDF" produces a clean document. Fill-in
+   fields keep their dotted line (so a printed copy can be filled by hand)
+   but print in full black instead of placeholder grey. */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+  }
+  .print-doc [contenteditable] {
+    color: #0f172a;
+  }
+  /* Tighter spacing on paper so an invoice or estimate fits on one page. */
+  .print-doc {
+    font-size: 11.5px;
+    line-height: 1.45;
+  }
+  .print-doc .py-5,
+  .print-doc .py-4,
+  .print-doc .py-3 {
+    padding-top: 0.55rem;
+    padding-bottom: 0.55rem;
+  }
+  .print-doc .pt-5,
+  .print-doc .pt-6,
+  .print-doc .pt-4 {
+    padding-top: 0.55rem;
+  }
+  .print-doc .pb-5,
+  .print-doc .pb-4 {
+    padding-bottom: 0.55rem;
+  }
+  .print-doc .break-inside-avoid {
+    break-inside: avoid;
+  }
+}
