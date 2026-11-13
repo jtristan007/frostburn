@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import { TopicPage } from '@/components/landing/topic-page'
 import { TIER_PRICES, TRIAL_PERIOD_DAYS } from '@/lib/stripe/plans'
 
-const TITLE = 'HVAC Invoicing Software with Automatic Payment Reminders | Frostburn'
-const DESCRIPTION = `HVAC invoicing software for small shops: quotes from your pricing book, online card payments, and automatic reminders on overdue invoices. Flat pricing from $${TIER_PRICES.starter}/month, ${TRIAL_PERIOD_DAYS}-day free trial.`
+const TITLE = 'HVAC & Air Conditioning Invoicing Software with Payment Reminders | Frostburn'
+const DESCRIPTION = `Invoicing software for small HVAC and air conditioning shops: quotes from your pricing book, online card payments, and automatic reminders on overdue invoices. Flat pricing from $${TIER_PRICES.starter}/month, ${TRIAL_PERIOD_DAYS}-day free trial.`
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -16,9 +16,9 @@ export const metadata: Metadata = {
 export default function HvacInvoicingSoftwarePage() {
   return (
     <TopicPage
-      eyebrow="HVAC invoicing software"
-      title="HVAC invoicing that gets you paid without the awkward calls."
-      intro="Frostburn turns the job into an invoice in seconds, lets customers pay by card online, and sends the reminders on overdue invoices for you. Built for HVAC shops with 1–15 techs."
+      eyebrow="HVAC & air conditioning invoicing software"
+      title="Air conditioning and HVAC invoicing that gets you paid without the awkward calls."
+      intro="Frostburn turns the job into an invoice in seconds, lets customers pay by card online, and sends the reminders on overdue invoices for you. Built for air conditioning and heating shops with 1–15 techs."
       problemsHeading="The work is done. The money isn’t in."
       problems={[
         {
@@ -68,6 +68,10 @@ export default function HvacInvoicingSoftwarePage() {
         { t: 'Send your first invoice', d: 'Overdue reminders and the morning briefing work from day one.' },
       ]}
       faqs={[
+        {
+          q: 'What’s the best invoicing software for an air conditioning business?',
+          a: `For a small air conditioning or HVAC shop, look for software that sends invoices from the job, takes card payments online and chases overdue invoices automatically, at a price that doesn’t climb with every tech you hire. Frostburn does all three for a flat $${TIER_PRICES.starter}/month for 1–5 techs, and it’s built only for heating and cooling companies.`,
+        },
         {
           q: 'How do customers pay?',
           a: 'Each invoice has a secure online payment page. Customers open the link and pay by card; the invoice is marked paid automatically.',
