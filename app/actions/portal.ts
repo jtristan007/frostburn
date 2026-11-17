@@ -46,6 +46,7 @@ export async function getPortalByToken(token: string) {
   return {
     customer,
     companyName: account?.name ?? null,
+    logoUrl: (account?.logo_url as string | null | undefined) ?? null,
     chargesEnabled: !!account?.stripe_connect_charges_enabled,
     country: countryOf(account),
     invoices: invoices ?? [],

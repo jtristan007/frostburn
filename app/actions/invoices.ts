@@ -134,6 +134,7 @@ export async function getInvoiceByToken(token: string) {
   return {
     invoice,
     companyName: account?.name ?? null,
+    logoUrl: (account?.logo_url as string | null | undefined) ?? null,
     customerName: customer?.name ?? null,
     chargesEnabled: !!account?.stripe_connect_charges_enabled,
     country: countryOf(account),
@@ -241,6 +242,7 @@ export async function sendInvoiceToCustomer(id: string): Promise<{ error?: strin
     country: countryOf(account),
     tax: taxBreakdown(invoice),
     gstNumber: account.gst_number ?? null,
+    logoUrl: account.logo_url,
   })
   if (!ok) return { error: 'The email could not be sent. Please try again in a minute.' }
 

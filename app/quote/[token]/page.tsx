@@ -1,13 +1,13 @@
 import { notFound } from 'next/navigation'
 import { getQuoteByToken, respondToQuote } from '@/app/actions/quotes'
-import { Logo } from '@/components/logo'
+import { ShopBrand, PoweredByFrostburn } from '@/components/shop-brand'
 
 export default async function PublicQuotePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
   const result = await getQuoteByToken(token)
   if (!result) notFound()
 
-  const { quote, items, customerName } = result
+  const { quote, items, customerName, companyName, logoUrl } = result
   const approve = respondToQuote.bind(null, token, 'approved')
   const decline = respondToQuote.bind(null, token, 'declined')
 
@@ -15,7 +15,7 @@ export default async function PublicQuotePage({ params }: { params: Promise<{ to
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-lg">
         <div className="text-center mb-6">
-          <Logo className="h-9 inline-block" />
+          <ShopBrand companyName={companyName} logoUrl={logoUrl} />
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
@@ -74,8 +74,9 @@ export default async function PublicQuotePage({ params }: { params: Promise<{ to
         </div>
 
         <p className="mt-6 text-center text-xs text-gray-400">
-          Questions about this quote? Contact the business that sent it to you.
+          Questions about this quote? Contact {companyName ?? 'the business that sent it to you'}.
         </p>
+        <PoweredByFrostburn />
       </div>
     </div>
   )

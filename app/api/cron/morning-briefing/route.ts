@@ -129,6 +129,7 @@ export async function GET(request: NextRequest) {
         total: Number(invoice.total),
         dueDate: invoice.due_date,
         country: countryOf(account),
+        logoUrl: account.logo_url,
       })
       if (sent) reminderCount++
     }

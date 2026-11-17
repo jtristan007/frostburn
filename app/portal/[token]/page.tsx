@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getPortalByToken } from '@/app/actions/portal'
 import { formatMoney } from '@/lib/money'
-import { Logo } from '@/components/logo'
+import { ShopBrand, PoweredByFrostburn } from '@/components/shop-brand'
 
 const INVOICE_STATUS_STYLE: Record<string, string> = {
   paid: 'bg-green-50 text-green-700',
@@ -23,7 +23,7 @@ export default async function CustomerPortalPage({ params }: { params: Promise<{
   const result = await getPortalByToken(token)
   if (!result) notFound()
 
-  const { customer, companyName, chargesEnabled, country, invoices, quotes, equipment } = result
+  const { customer, companyName, logoUrl, chargesEnabled, country, invoices, quotes, equipment } = result
   const outstanding = invoices
     .filter((inv) => inv.status === 'sent' || inv.status === 'overdue')
     .reduce((sum, inv) => sum + Number(inv.total), 0)
@@ -32,7 +32,7 @@ export default async function CustomerPortalPage({ params }: { params: Promise<{
     <div className="min-h-screen bg-gray-50 px-6 py-16">
       <div className="w-full max-w-2xl mx-auto">
         <div className="text-center mb-6">
-          <Logo className="h-9 inline-block" />
+          <ShopBrand companyName={companyName} logoUrl={logoUrl} />
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 mb-6">
@@ -142,6 +142,7 @@ export default async function CustomerPortalPage({ params }: { params: Promise<{
         <p className="mt-6 text-center text-xs text-gray-400">
           Questions about your account? Contact {companyName ?? 'the business you work with'}.
         </p>
+        <PoweredByFrostburn />
       </div>
     </div>
   )

@@ -34,6 +34,7 @@ export default async function RemindersSettingsPage({
     total: overdue ? Number(overdue.total) : 385,
     dueDate: overdue?.due_date ?? '2026-10-15',
     country: countryOf(account),
+    logoUrl: account.logo_url,
   })
 
   return (
