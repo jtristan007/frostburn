@@ -4,18 +4,26 @@ import { revalidatePath } from 'next/cache'
 import { getCurrentAccount } from '@/lib/account'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-const MAX_BYTES = 2 * 1024 * 1024
-const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml']
+const MAX_BYTES = 3 * 1024 * 1024
+const EXT_BY_TYPE: Record<string, string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/webp': 'webp',
+  'image/svg+xml': 'svg',
+}
+const ALLOWED_TYPES = Object.keys(EXT_BY_TYPE)
 
 export async function updateLogo(formData: FormData): Promise<{ error?: string }> {
   const { supabase, account } = await getCurrentAccount()
   const file = formData.get('logo') as File | null
 
   if (!file || file.size === 0) return { error: 'Choose a file first.' }
-  if (file.size > MAX_BYTES) return { error: 'Keep it under 2MB.' }
-  if (!ALLOWED_TYPES.includes(file.type)) return { error: 'PNG, JPEG, WebP, or SVG only.' }
+  if (file.size > MAX_BYTES) return { error: 'That file is too large. Try a PNG or JPEG under 3MB.' }
+  if (!ALLOWED_TYPES.includes(file.type)) return { error: 'Use a PNG, JPEG, WebP or SVG file.' }
 
-  const ext = file.name.split('.').pop() || 'png'
+  // Extension from the checked type, not the file name (names can have no
+  // extension, or the wrong one).
+  const ext = EXT_BY_TYPE[file.type]
   const path = `${account.id}/logo.${ext}`
 
   const { error: uploadError } = await supabase.storage
