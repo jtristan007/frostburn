@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getInvoiceByToken, payInvoice } from '@/app/actions/invoices'
 import { formatMoney } from '@/lib/money'
-import { Logo } from '@/components/logo'
+import { ShopBrand, PoweredByFrostburn } from '@/components/shop-brand'
 import { reconcileInvoicePayment } from '@/lib/stripe-connect/reconcile'
 
 export default async function PayInvoicePage({
@@ -16,7 +16,7 @@ export default async function PayInvoicePage({
   const result = await getInvoiceByToken(token)
   if (!result) notFound()
 
-  const { invoice, companyName, customerName, chargesEnabled, country, tax, gstNumber } = result
+  const { invoice, companyName, logoUrl, customerName, chargesEnabled, country, tax, gstNumber } = result
   // Confirm with Stripe rather than trusting ?paid=1 from the redirect.
   const isPaid = invoice.status === 'paid' || (await reconcileInvoicePayment(invoice.id))
   const processing = paid === '1' && !isPaid
@@ -25,7 +25,7 @@ export default async function PayInvoicePage({
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-lg">
         <div className="text-center mb-6">
-          <Logo className="h-9 inline-block" />
+          <ShopBrand companyName={companyName} logoUrl={logoUrl} />
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
@@ -92,6 +92,7 @@ export default async function PayInvoicePage({
         <p className="mt-6 text-center text-xs text-gray-400">
           Questions about this invoice? Contact {companyName ?? 'the business that sent it to you'}.
         </p>
+        <PoweredByFrostburn />
       </div>
     </div>
   )

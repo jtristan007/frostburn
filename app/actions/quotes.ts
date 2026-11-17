@@ -69,14 +69,14 @@ export async function getQuoteByToken(token: string) {
   const admin = createAdminClient()
   const { data: quote } = await admin
     .from('quotes')
-    .select('id, status, total, created_at, customer_id')
+    .select('id, status, total, created_at, customer_id, account_id')
     .eq('share_token', token)
     .maybeSingle()
 
   // A draft isn't ready for the customer even if its link leaked early.
   if (!quote || quote.status === 'draft') return null
 
-  const [{ data: items }, { data: customer }] = await Promise.all([
+  const [{ data: items }, { data: customer }, { data: account }] = await Promise.all([
     admin
       .from('quote_items')
       .select('description, quantity, unit_price, line_total')
@@ -84,9 +84,16 @@ export async function getQuoteByToken(token: string) {
     quote.customer_id
       ? admin.from('customers').select('name').eq('id', quote.customer_id).maybeSingle()
       : Promise.resolve({ data: null }),
+    admin.from('accounts').select('name, logo_url').eq('id', quote.account_id).maybeSingle(),
   ])
 
-  return { quote, items: items ?? [], customerName: customer?.name ?? null }
+  return {
+    quote,
+    items: items ?? [],
+    customerName: customer?.name ?? null,
+    companyName: account?.name ?? null,
+    logoUrl: account?.logo_url ?? null,
+  }
 }
 
 // Bound as the public pay-page-style form action on /quote/[token] (same

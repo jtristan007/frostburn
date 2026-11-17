@@ -13,15 +13,40 @@ function esc(s: string) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
-function wrapper(bodyHtml: string) {
+// Email clients (Gmail, Outlook) don't render SVG, and Outlook doesn't render
+// WebP, so only PNG/JPEG/GIF logos go in email; others fall back to the name.
+function emailSafeLogo(logoUrl: string | null | undefined) {
+  if (!logoUrl) return null
+  try {
+    const path = new URL(logoUrl).pathname.toLowerCase()
+    return /\.(png|jpe?g|gif)$/.test(path) ? logoUrl : null
+  } catch {
+    return null
+  }
+}
+
+// Emails a shop sends to its customers carry the shop's brand (logo, or name)
+// at the top; Frostburn's own emails to owners keep the Frostburn wordmark.
+type ShopBrand = { companyName: string; logoUrl?: string | null }
+
+function wrapper(bodyHtml: string, brand?: ShopBrand) {
+  const logo = brand ? emailSafeLogo(brand.logoUrl) : null
+  const header = brand
+    ? logo
+      ? `<img src="${esc(logo)}" alt="${esc(brand.companyName)}" style="display:block; max-height:72px; max-width:240px; height:auto; width:auto; border:0;" />`
+      : `<span style="color:#05091a">${esc(brand.companyName)}</span>`
+    : `<span style="color:#05091a">Frost</span><span style="color:#38bdf8">burn</span>`
+  const footer = brand
+    ? `Sent by Frostburn on behalf of ${esc(brand.companyName)}.`
+    : 'Sent by Frostburn on behalf of your service provider.'
   return `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #0f172a;">
       <div style="padding: 24px 0 16px; font-size: 18px; font-weight: 700;">
-        <span style="color:#05091a">Frost</span><span style="color:#38bdf8">burn</span>
+        ${header}
       </div>
       ${bodyHtml}
       <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8;">
-        Sent by Frostburn on behalf of your service provider.
+        ${footer}
       </div>
     </div>
   `
@@ -35,12 +60,13 @@ export type InvoiceReminderParams = {
   total: number
   dueDate: string | null
   country: Country
+  logoUrl?: string | null
 }
 
 // The overdue reminder's subject and HTML, built separately from sending so
 // Settings > Reminders can preview exactly what customers receive.
 export function invoiceReminderEmail(params: Omit<InvoiceReminderParams, 'to'>) {
-  const { customerName, companyName, invoiceNumber, total, dueDate, country } = params
+  const { customerName, companyName, invoiceNumber, total, dueDate, country, logoUrl } = params
   return {
     subject: `Reminder: Invoice ${invoiceNumber} from ${companyName} is overdue`.replace(/[\r\n]+/g, ' '),
     html: wrapper(`
@@ -52,7 +78,7 @@ export function invoiceReminderEmail(params: Omit<InvoiceReminderParams, 'to'>) 
           ${dueDate ? `<div style="font-size:13px; color:#64748b; margin-top:4px;">Was due ${esc(dueDate)}</div>` : ''}
         </div>
         <p>If you've already sent payment, thank you -- please disregard this message.</p>
-      `),
+      `, { companyName, logoUrl }),
   }
 }
 
@@ -163,8 +189,9 @@ export async function sendInvoiceEmail(params: {
   country: Country
   tax?: TaxBreakdown | null
   gstNumber?: string | null
+  logoUrl?: string | null
 }): Promise<boolean> {
-  const { to, replyTo, customerName, companyName, invoiceNumber, total, dueDate, payUrl, country, tax, gstNumber } =
+  const { to, replyTo, customerName, companyName, invoiceNumber, total, dueDate, payUrl, country, tax, gstNumber, logoUrl } =
     params
   const company = esc(companyName)
   try {
@@ -194,7 +221,7 @@ export async function sendInvoiceEmail(params: {
             : `<p>Please contact ${company} to arrange payment.</p>`
         }
         <p>Questions about this invoice? Just reply to this email to reach ${company}.</p>
-      `),
+      `, { companyName, logoUrl }),
     })
     if (error) {
       console.error('sendInvoiceEmail failed:', error)
