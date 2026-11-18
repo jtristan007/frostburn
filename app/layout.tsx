@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter, Bricolage_Grotesque, IBM_Plex_Mono, Bebas_Neue } from 'next/font/google'
 import './globals.css'
 
@@ -22,6 +22,9 @@ export const metadata: Metadata = {
   title: SITE_TITLE,
   description: SITE_DESCRIPTION,
   applicationName: 'Frostburn',
+  // Installed on an iPhone home screen: open full screen, labelled
+  // "Frostburn". The icon itself is app/apple-icon.png.
+  appleWebApp: { capable: true, title: 'Frostburn', statusBarStyle: 'default' },
   openGraph: {
     type: 'website',
     siteName: 'Frostburn',
@@ -35,6 +38,10 @@ export const metadata: Metadata = {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#05091A',
 }
 
 export default function RootLayout({
