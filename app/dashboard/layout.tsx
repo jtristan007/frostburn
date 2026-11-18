@@ -1,5 +1,6 @@
 import { getCurrentAccount } from '@/lib/account'
 import { DashboardNav } from '@/components/dashboard/nav'
+import { InstallAppBanner } from '@/components/dashboard/install-app-banner'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -11,6 +12,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="min-h-screen bg-gray-50 print:bg-white">
+      <InstallAppBanner />
       <div className="print:hidden">
         <DashboardNav accountName={account.name} />
       </div>

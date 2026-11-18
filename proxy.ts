@@ -28,6 +28,9 @@ const publicPaths = [
   '/sitemap.xml',
   '/opengraph-image',
   '/twitter-image',
+  // Install-as-app files (app/manifest.ts, app/apple-icon.png).
+  '/manifest.webmanifest',
+  '/apple-icon.png',
 ]
 
 export async function proxy(request: NextRequest) {
