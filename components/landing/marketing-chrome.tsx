@@ -5,10 +5,10 @@ import { Logo } from '@/components/logo'
 
 export function MarketingHeader() {
   return (
-    <header className="border-b border-white/10">
+    <header className="border-b border-[#F59E0B]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
         <Link href="/" aria-label="Frostburn home">
-          <Logo className="h-10 sm:h-12" />
+          <Logo className="h-12 sm:h-16" animateFlake />
         </Link>
         <div className="flex items-center gap-3 sm:gap-4">
           <Link href="/login" className="text-sm font-medium text-gray-300 hover:text-white whitespace-nowrap">

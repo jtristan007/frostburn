@@ -2,7 +2,13 @@
 // an SVG loaded via <img> can't see the page's fonts, which silently falls
 // back to a wider system font and clips the wordmark's last letter. The face
 // itself is self-hosted by next/font in app/layout.tsx (--font-logo).
-export function Logo({ className = 'h-10' }: { className?: string }) {
+export function Logo({
+  className = 'h-10',
+  animateFlake = false,
+}: {
+  className?: string
+  animateFlake?: boolean
+}) {
   return (
     <svg viewBox="0 0 500 120" role="img" aria-label="Frostburn" className={className}>
       <defs>
@@ -29,14 +35,16 @@ export function Logo({ className = 'h-10' }: { className?: string }) {
       <rect x="4" y="4" width="112" height="112" rx="22" fill="none" stroke="#38BDF8" strokeWidth="1.5" opacity="0.55" />
       <rect x="7" y="7" width="106" height="106" rx="19" fill="none" stroke="#38BDF8" strokeWidth="0.4" opacity="0.18" />
 
-      <g transform="translate(60,60)" stroke="#38BDF8" strokeLinecap="round" fill="none" filter="url(#iceGlow)">
-        <use href="#logoArm" />
-        <use href="#logoArm" transform="rotate(60)" />
-        <use href="#logoArm" transform="rotate(120)" />
-        <use href="#logoArm" transform="rotate(180)" />
-        <use href="#logoArm" transform="rotate(240)" />
-        <use href="#logoArm" transform="rotate(300)" />
-        <circle r="5.5" fill="#F59E0B" stroke="none" />
+      <g className={animateFlake ? 'fb-flake' : undefined}>
+        <g transform="translate(60,60)" stroke="#38BDF8" strokeLinecap="round" fill="none" filter="url(#iceGlow)">
+          <use href="#logoArm" />
+          <use href="#logoArm" transform="rotate(60)" />
+          <use href="#logoArm" transform="rotate(120)" />
+          <use href="#logoArm" transform="rotate(180)" />
+          <use href="#logoArm" transform="rotate(240)" />
+          <use href="#logoArm" transform="rotate(300)" />
+          <circle r="5.5" fill="#F59E0B" stroke="none" />
+        </g>
       </g>
 
       <text

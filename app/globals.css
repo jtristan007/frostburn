@@ -93,7 +93,27 @@ body {
   animation: rise-in-solid 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* One-time drop of the logo snowflake into its badge. Only applied where
+   Logo gets animateFlake (the marketing header). */
+@keyframes flake-drop {
+  from {
+    transform: translateY(-120px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.fb-flake {
+  animation: flake-drop 1.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .fb-flake {
+    animation: none;
+  }
   .rise-solid {
     animation: none;
     transform: none;
