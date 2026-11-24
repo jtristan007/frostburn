@@ -50,6 +50,12 @@ export function MarketingFooter() {
             info@frostburn.io
           </a>
         </p>
+        <p className="text-xs text-mist">
+          Built by{' '}
+          <a href="https://dragonwire.ai" className="text-ice hover:underline">
+            Dragonwire.AI
+          </a>
+        </p>
         <div className="flex flex-wrap justify-center gap-4 text-xs">
           {MARKETING_LINKS.map((l) => (
             <Link key={l.href} href={l.href} className="hover:text-white">

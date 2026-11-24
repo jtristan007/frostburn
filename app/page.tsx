@@ -428,6 +428,12 @@ export default function LandingPage() {
               info@frostburn.io
             </a>
           </p>
+          <p className="text-xs text-mist">
+            Built by{' '}
+            <a href="https://dragonwire.ai" className="text-ice hover:underline">
+              Dragonwire.AI
+            </a>
+          </p>
           <div className="flex flex-wrap justify-center gap-4 text-xs text-mist">
             <Link href="/terms" className="hover:text-white">
               Terms
